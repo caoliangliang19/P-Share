@@ -1,0 +1,115 @@
+//
+//  ParkingReservationChooseTimeCell.m
+//  P-Share
+//
+//  Created by fay on 16/8/29.
+//  Copyright © 2016年 曹亮亮. All rights reserved.
+//
+
+#import "ParkingReservationChooseTimeCell.h"
+#import "TimeView.h"
+#import "YuYueTimeModel.h"
+
+@interface ParkingReservationChooseTimeCell()
+{
+    NSMutableArray  *_timeViewArray;
+    TimeView        *_temTimeV;
+}
+@end
+@implementation ParkingReservationChooseTimeCell
+
+- (instancetype)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier
+{
+    if (self == [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
+        [self setUpSubView];
+    }
+    
+    return self;
+}
+- (void)setUpSubView
+{
+    _timeViewArray = [NSMutableArray array];
+    self.contentView.backgroundColor = [UIColor blackColor];
+    for (int i=0; i<7; i++) {
+        TimeView *timeV = [[TimeView alloc] init];
+        UITapGestureRecognizer *tapGesTure = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(TimeViewClick:)];
+        [timeV addGestureRecognizer:tapGesTure];
+        
+        timeV.tag = i;
+        [_timeViewArray addObject:timeV];
+        if (i==0) {
+            _temTimeV = timeV;
+            timeV.timeViewStyle = TimeViewStyleSelected;
+        }else
+        {
+            timeV.timeViewStyle = TimeViewStyleUnSelect;
+        }
+        [self.contentView addSubview:timeV];
+    }
+    [_timeViewArray mas_distributeViewsAlongAxis:MASAxisTypeHorizontal withFixedItemLength:40 leadSpacing:10 tailSpacing:10];
+    [_timeViewArray mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerY.mas_equalTo(self);
+        make.height.mas_equalTo(40);
+    }];
+    
+    if (!_dataArray) {
+        [self loadTimeData];
+    }
+}
+- (void)TimeViewClick:(UITapGestureRecognizer *)tapGesture
+{
+    TimeView *timeView = (TimeView *)tapGesture.view;
+    _temTimeV.timeViewStyle = TimeViewStyleUnSelect;
+    _temTimeV = timeView;
+    _temTimeV.timeViewStyle = TimeViewStyleSelected;
+    YuYueTimeModel *model = _dataArray[timeView.tag];
+    MyLog(@"%@",model);
+    if (self.timeCallBackBlock) {
+        self.timeCallBackBlock(self,model);
+    }
+    
+}
+- (void)setDataArray:(NSArray *)dataArray
+{
+    _dataArray = dataArray;
+    for (int i=0; i<dataArray.count; i++) {
+        TimeView *timeV = _timeViewArray[i];
+        timeV.model = dataArray[i];
+    }
+    
+}
+
+#pragma mark -- 获取上方时间数据
+- (void)loadTimeData
+{
+    Parking *parking = [GroupManage shareGroupManages].parking;
+    NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithObjectsAndKeys:parking.parkingId,@"parkingId",@"1.3.7",@"version", nil];
+    
+    [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(reservedParking) WithDic:dic needEncryption:YES needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        MyLog(@"%@",responseObject);
+
+        NSMutableArray *temArray = [NSMutableArray array];
+        for (NSDictionary *dic in responseObject[@"data"][@"week"]) {
+            YuYueTimeModel *model = [YuYueTimeModel shareObjectWithDic:dic];
+            [temArray addObject:model];
+        }
+//        默认首先刷新当日套餐
+        if (temArray.count > 0) {
+            YuYueTimeModel *model = [temArray objectAtIndex:0];
+            if (self.timeCallBackBlock) {
+                self.timeCallBackBlock(self,model);
+            }
+        }
+        self.dataArray = temArray;
+        
+    } error:^(NSString *error) {
+        MyLog(@"%@",error);
+
+    } failure:^(NSString *fail) {
+        MyLog(@"%@",fail);
+
+    }];
+
+}
+
+@end

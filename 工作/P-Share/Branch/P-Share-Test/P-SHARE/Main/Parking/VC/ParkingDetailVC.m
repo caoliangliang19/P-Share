@@ -1,0 +1,400 @@
+//
+//  ParkingDetailVC.m
+//  P-SHARE
+//
+//  Created by fay on 16/9/14.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "ParkingDetailVC.h"
+#import "DaoHangVC.h"
+#import "NewDaiBoOrderVC.h"
+#import "ShareModel.h"
+#import "ShareView.h"
+#import "StartDaiBoView.h"
+#import "CarListVC.h"
+@interface ParkingDetailVC ()
+{
+    ShareView *_shareView;
+}
+@property (weak, nonatomic) IBOutlet UIView *daiBoView;
+@property (weak, nonatomic) IBOutlet UIButton *daiBoBtn;
+@property (weak, nonatomic) IBOutlet UIImageView *parkingImageV;
+@property (weak, nonatomic) IBOutlet UILabel *parkingName;
+@property (weak, nonatomic) IBOutlet UILabel *parkingAddress;
+@property (weak, nonatomic) IBOutlet UILabel *cheWeiNum;
+@property (weak, nonatomic) IBOutlet UILabel *linShiParkDescributeL;
+@property (weak, nonatomic) IBOutlet UILabel *youHuiParkDescributeL;
+@property (weak, nonatomic) IBOutlet UILabel *daiBoParkDescributeL;
+@property (nonatomic,strong)GroupManage *manage;
+@property (weak, nonatomic) IBOutlet UIImageView *collectionImageV;
+@property (weak, nonatomic) IBOutlet UILabel *blueL;
+@property (weak, nonatomic) IBOutlet UILabel *greenL;
+@property (weak, nonatomic) IBOutlet UILabel *yellowL;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *blueLTraling1;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *blueLTraling2;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *blueLTraling3;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *infoTopLayout2;
+@property (weak, nonatomic) IBOutlet NSLayoutConstraint *infoTopLayout1;
+@property (strong, nonatomic) StartDaiBoView *startDaiBoView;
+
+@end
+
+@implementation ParkingDetailVC
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    _manage = [GroupManage shareGroupManages];
+    self.daiBoBtn.layer.cornerRadius = 4;
+    self.daiBoBtn.layer.masksToBounds = YES;
+    self.title = @"停车场详情";
+    [MobClick event:@"GoInCarDetailID"];
+    [self loadParkingAllData];
+    [self createRightBarItem];
+}
+
+- (void)loadParkingAllData
+{
+    NSString *summary = [[NSString stringWithFormat:@"%@%@%@%@",_park.parkingId,[UtilTool getCustomId],@"1.3.7",SECRET_KEY] MD5];
+    NSString *urlStr = [NSString stringWithFormat:@"%@/%@/%@/%@/%@",APP_URL(getParking),_park.parkingId,[UtilTool getCustomId],@"1.3.7",summary];
+    [NetWorkEngine getRequestUse:(self) WithURL:urlStr WithDic:nil needAlert:NO showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        Parking *parking = [Parking shareObjectWithDic:responseObject[@"parkingMap"]];
+        self.park = parking;
+        [self loadCollectionList];
+        [self assignmentUI];
+
+        MyLog(@"%@",responseObject);
+        
+        
+    } error:^(NSString *error) {
+        [self assignmentUI];
+
+    } failure:^(NSString *fail) {
+        [self assignmentUI];
+
+    }];
+    
+}
+- (void)loadCollectionList
+{
+    NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithObjectsAndKeys:[UtilTool getCustomId],@"customerId",@"2.0.0",@"version",nil];
+    [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(queryCollection) WithDic:dic needEncryption:YES needAlert:NO showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        for (NSDictionary *dic in responseObject[@"collectionList"]) {
+            if ([dic[@"searchTitle"] isEqualToString:self.park.parkingName]) {
+                self.park.isCollection = @"1";
+                [self setCollectionParkingStartImage];
+            }
+        }
+        
+    } error:^(NSString *error) {
+        
+    } failure:^(NSString *fail) {
+        
+    }];
+    
+}
+- (void)assignmentUI
+{
+    [_parkingImageV sd_setImageWithURL:[NSURL URLWithString:_park.parkingPath] placeholderImage:[UIImage imageNamed:@"homeParkingBackimage"]];
+    
+    _parkingName.text = _park.parkingName;
+    _parkingAddress.text = _park.parkingAddress;
+    _cheWeiNum.text = [NSString stringWithFormat:@"剩余车位数:%ld",_park.parkingCanUse];
+    
+    _youHuiParkDescributeL.text = [UtilTool isBlankString:_park.sharePriceComment] ? @" ":_park.sharePriceComment;
+    _linShiParkDescributeL.text = [UtilTool isBlankString:_park.peacetimePrice] ? @" ":_park.peacetimePrice;
+    _daiBoParkDescributeL.text  = [UtilTool isBlankString:_park.parkPriceComment] ? @" ":_park.parkPriceComment;
+    
+    if ([[UtilTool StringValue:self.park.isCharge] isEqualToString:@"0"]&&![[UtilTool StringValue:self.park.canUse] isEqualToString:@"2"]) {
+        self.parkingStyle = PARKINGSTYLENONE;
+    }else if ([[UtilTool StringValue:self.park.isCharge] isEqualToString:@"1"]&&![[UtilTool StringValue:self.park.canUse] isEqualToString:@"2"]){
+        self.parkingStyle = PARKINGSTYLECHONGDIAN;
+        
+    }else if ([[UtilTool StringValue:self.park.isCharge] isEqualToString:@"0"]&&[[UtilTool StringValue:self.park.canUse] isEqualToString:@"2"]){
+        self.parkingStyle = PARKINGSTYLEDAIBO;
+        
+    }else
+    {
+        self.parkingStyle = PARKINGSTYLEDAIBOCHONGDIAN;
+    }
+
+    [self.view layoutIfNeeded];
+    
+}
+- (void)setCollectionParkingStartImage
+{
+    if ([self.park.isCollection integerValue] == 0) {
+        self.collectionImageV.image = [UIImage imageNamed:@"starh"];
+    }else if ([self.park.isCollection integerValue] == 1){
+        self.collectionImageV.image = [UIImage imageNamed:@"collection_v2"];
+    }
+}
+- (IBAction)centerButtonClick:(UIButton *)sender {
+//    0:设为家  1:收藏  2:导航
+    switch (sender.tag) {
+        case 0:
+        {
+            [self setHomeParking];
+        }
+            break;
+            
+        case 1:
+        {
+            [self CollectionParking];
+
+        }
+            break;
+        case 2:
+        {
+            [self navigationParking];
+            
+        }
+            break;
+        default:
+            break;
+    }
+    
+}
+- (void)navigationParking
+{
+    DaoHangVC *daoHangVC = [[DaoHangVC alloc] initWithParking:self.park];
+    [self.view addSubview:daoHangVC.view];
+    [self addChildViewController:daoHangVC];
+}
+#pragma mark -- 开始代泊
+- (IBAction)startDaiBo:(id)sender {
+    
+    if(_manage.isVisitor){
+        [UtilTool creatAlertController:self title:@"提示" describute:@"使用该功能需要登录帐号,是否去登录?" sureClick:^{
+            LoginVC *login = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"LoginVC"];
+            [self.rt_navigationController pushViewController:login animated:YES complete:nil];
+        } cancelClick:^{
+            
+        }];
+        return;
+    }
+    if ([UtilTool isBlankString:[GroupManage shareGroupManages].car.carNumber]) {
+        
+        [UtilTool creatAlertController:self title:@"您暂未绑定车辆" describute:@"请先去绑定车辆" sureClick:^{
+            CarListVC *carListVC = [[CarListVC alloc] init];
+            [self.rt_navigationController pushViewController:carListVC animated:YES complete:nil];
+        } cancelClick:^{
+            
+        }];
+        
+        return;
+    }
+    
+    [self.startDaiBoView StartDaiBoViewShow];
+
+//    NewDaiBoOrderVC *daiBoVC = [[NewDaiBoOrderVC alloc] init];
+//    [self.rt_navigationController pushViewController:daiBoVC animated:YES];
+}
+
+- (StartDaiBoView *)startDaiBoView
+{
+    if (!_startDaiBoView) {
+        _startDaiBoView = [[StartDaiBoView alloc] init];
+    }
+    return _startDaiBoView;
+}
+#pragma mark --  设置家停车场
+- (void)setHomeParking
+{
+    if (_manage.isVisitor) {
+        _manage.homeParking = self.park;
+        [_manage groupAlertShowWithTitle:@"设置成功"];
+
+    }else
+    {
+        NSString *summary = [[NSString stringWithFormat:@"%@%@%@%@%@",[UtilTool getCustomId],self.park.parkingId,@(1),@"1.3.7",SECRET_KEY] MD5];
+        NSString *url = [NSString stringWithFormat:@"%@/%@/%@/%@/%@/%@",APP_URL(setDefaultScan),[UtilTool getCustomId],self.park.parkingId,@(1),@"1.3.7",summary];
+        [NetWorkEngine getRequestUse:(self) WithURL:url WithDic:nil needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+            
+            _manage.homeParking = self.park;
+            [_manage groupAlertShowWithTitle:@"设置成功"];
+            
+        } error:^(NSString *error) {
+            
+        } failure:^(NSString *fail) {
+            
+        }];
+
+    }
+}
+#pragma mark -- 收藏车厂
+- (void)CollectionParking
+{
+    if(_manage.isVisitor){
+        [UtilTool creatAlertController:self title:@"提示" describute:@"使用该功能需要登录帐号,是否去登录?" sureClick:^{
+            LoginVC *login = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"LoginVC"];
+            [self.rt_navigationController pushViewController:login animated:YES complete:nil];
+        } cancelClick:^{
+            
+        }];
+    }else
+    {
+        BOOL isCollection = [self.park.isCollection isEqualToString:@"1"]? YES : NO;
+        
+        if (isCollection) {
+            
+            NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithObjectsAndKeys:[UtilTool getCustomId],@"customerId",self.park.parkingName,@"addressName",@"2.0.0",@"version",nil];
+            [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(deleteCollection) WithDic:dic needEncryption:YES needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+                self.park.isCollection = @"0";
+                [self setCollectionParkingStartImage];
+                
+            } error:^(NSString *error) {
+                
+            } failure:^(NSString *fail) {
+                
+            }];
+            
+        
+        }else
+        {
+            NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithObjectsAndKeys:[UtilTool getCustomId],@"customerId",self.park.parkingName,@"addressName",self.park.parkingAddress,@"address",self.park.parkingLatitude,@"latitude",self.park.parkingLongitude,@"longitude",@"2.0.0",@"version",nil];
+            
+            
+            [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(saveCollection) WithDic:dic needEncryption:YES needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+                self.park.isCollection = @"1";
+                [self setCollectionParkingStartImage];
+                [_manage groupAlertShowWithTitle:@"收藏成功"];
+
+            } error:^(NSString *error) {
+                
+            } failure:^(NSString *fail) {
+                
+            }];
+            
+            
+            
+        }
+        
+    }
+
+}
+
+- (void)setParkingStyle:(PARKINGSTYLE)parkingStyle
+{
+    _parkingStyle = parkingStyle;
+    switch (parkingStyle) {
+        case PARKINGSTYLENONE:
+        {
+            _greenL.hidden = YES;
+            _yellowL.hidden = YES;
+            _daiBoView.hidden = YES;
+            _infoTopLayout1.priority = 800;
+            _infoTopLayout2.priority = 900;
+            
+            if ([[UtilTool StringValue:self.park.isAutoPay] isEqualToString:@"0"]) {
+                _blueL.hidden = YES;
+            }else
+            {
+                _blueLTraling3.priority = 900;
+                _blueLTraling1.priority = 800;
+                _blueLTraling2.priority = 700;
+                
+            }
+            
+        }
+            break;
+            
+        case PARKINGSTYLEDAIBO:
+        {
+            _greenL.hidden = YES;
+            
+            _daiBoView.hidden = NO;
+            _infoTopLayout1.priority = 900;
+            _infoTopLayout2.priority = 800;
+            if ([[UtilTool StringValue:self.park.isAutoPay] isEqualToString:@"0"]) {
+                _blueL.hidden = YES;
+            }else
+            {
+                _blueLTraling1.priority = 800;
+                _blueLTraling2.priority = 900;
+            }
+            
+        }
+            break;
+            
+        case PARKINGSTYLECHONGDIAN:
+        {
+            _greenL.hidden = YES;
+            _yellowL.text = @"充电车位";
+            _yellowL.backgroundColor = KMAIN_COLOR;
+            _daiBoView.hidden = YES;
+            _infoTopLayout1.priority = 800;
+            _infoTopLayout2.priority = 900;
+            if ([[UtilTool StringValue:self.park.isAutoPay] isEqualToString:@"0"]) {
+                _blueL.hidden = YES;
+            }else
+            {
+                _blueLTraling1.priority = 800;
+                _blueLTraling2.priority = 900;
+            }
+            
+            
+        }
+            break;
+            
+        case PARKINGSTYLEDAIBOCHONGDIAN:
+        {
+            _daiBoView.hidden = NO;
+            _infoTopLayout2.priority = 800;
+
+            _infoTopLayout1.priority = 900;
+            if ([[UtilTool StringValue:self.park.isAutoPay] isEqualToString:@"0"]) {
+                _blueL.hidden = YES;
+            }else
+            {
+                _blueLTraling1.priority = 900;
+                _blueLTraling2.priority = 800;
+            }
+        }
+            break;
+        default:
+            break;
+    }
+    
+
+    
+}
+
+#pragma mark -- 分享
+- (void)createRightBarItem{
+    UIButton *button = [[UIButton alloc]initWithFrame:CGRectMake(0, 0, 60, 40)];
+    button.backgroundColor = [UIColor clearColor];
+    UIImageView *imageView = [[UIImageView alloc]initWithFrame:CGRectMake(35, 10, 20, 20)];
+    imageView.image = [UIImage imageNamed:@"share"];
+    [button addSubview:imageView];
+    [button addTarget:self action:@selector(shareClick) forControlEvents:UIControlEventTouchUpInside];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithCustomView:button];
+    
+}
+#pragma mark -- 点击分享
+- (void)shareClick{
+    
+    ShareModel *shareModel = [ShareModel new];
+    shareModel.title = [NSString stringWithFormat:@"%@",self.park.parkingName];
+    shareModel.describute = [NSString stringWithFormat:@"%@还有%ld个停车位,赶紧下载<口袋停APP https://itunes.apple.com/cn/app/kou-dai-ting/id1049233050?mt=8>预约车位,让你从此停车不烦恼！",self.park.parkingName,self.park.parkingCanUse];;
+    shareModel.url = @"https://itunes.apple.com/cn/app/kou-dai-ting/id1049233050?mt=8";
+
+    if (!_shareView) {
+        _shareView = [ShareView createShareView];
+    }
+    _shareView.shareModel = shareModel;
+    
+    [_shareView ShareViewShow];
+    
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+
+@end

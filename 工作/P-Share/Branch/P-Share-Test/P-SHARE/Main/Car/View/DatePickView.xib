@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="DatePickView">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="200"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <pickerView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="ZDF-b5-72e">
+                    <rect key="frame" x="0.0" y="36" width="375" height="164"/>
+                </pickerView>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="kbr-vd-oFp">
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="36"/>
+                    <subviews>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0Ae-qJ-mDN">
+                            <rect key="frame" x="303" y="0.0" width="72" height="36"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="72" id="M8D-RK-Ld4"/>
+                            </constraints>
+                            <state key="normal" title="确定">
+                                <color key="titleColor" red="0.99215686270000003" green="0.56862745100000001" blue="0.2274509804" alpha="1" colorSpace="calibratedRGB"/>
+                            </state>
+                            <connections>
+                                <action selector="tureBtn:" destination="iN0-l3-epB" eventType="touchUpInside" id="kww-Wi-bsK"/>
+                            </connections>
+                        </button>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="请选择上路时间" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="mNw-xT-IAw">
+                            <rect key="frame" x="72" y="0.0" width="231" height="36"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                            <color key="textColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="VKN-VF-Up6">
+                            <rect key="frame" x="0.0" y="0.0" width="72" height="36"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="72" id="wk4-bL-OHr"/>
+                            </constraints>
+                            <state key="normal" title="取消">
+                                <color key="titleColor" red="0.20000000000000001" green="0.20000000000000001" blue="0.20000000000000001" alpha="1" colorSpace="calibratedRGB"/>
+                            </state>
+                            <connections>
+                                <action selector="cancleBtn:" destination="iN0-l3-epB" eventType="touchUpInside" id="BMa-NM-Kb5"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <constraints>
+                        <constraint firstItem="0Ae-qJ-mDN" firstAttribute="top" secondItem="kbr-vd-oFp" secondAttribute="top" id="0Rg-xr-V2X"/>
+                        <constraint firstAttribute="trailing" secondItem="0Ae-qJ-mDN" secondAttribute="trailing" id="3S3-8U-620"/>
+                        <constraint firstItem="VKN-VF-Up6" firstAttribute="leading" secondItem="kbr-vd-oFp" secondAttribute="leading" id="3T4-34-mXw"/>
+                        <constraint firstAttribute="bottom" secondItem="VKN-VF-Up6" secondAttribute="bottom" id="3gd-Pe-qsT"/>
+                        <constraint firstItem="mNw-xT-IAw" firstAttribute="top" secondItem="kbr-vd-oFp" secondAttribute="top" id="8T9-cB-bEA"/>
+                        <constraint firstItem="0Ae-qJ-mDN" firstAttribute="leading" secondItem="mNw-xT-IAw" secondAttribute="trailing" id="OvG-cw-XTV"/>
+                        <constraint firstAttribute="bottom" secondItem="0Ae-qJ-mDN" secondAttribute="bottom" id="VZ6-3E-Ugw"/>
+                        <constraint firstItem="VKN-VF-Up6" firstAttribute="top" secondItem="kbr-vd-oFp" secondAttribute="top" id="Z2u-U2-e6w"/>
+                        <constraint firstItem="mNw-xT-IAw" firstAttribute="leading" secondItem="VKN-VF-Up6" secondAttribute="trailing" id="cpY-FJ-JMw"/>
+                        <constraint firstAttribute="bottom" secondItem="mNw-xT-IAw" secondAttribute="bottom" id="hyF-MV-LZL"/>
+                    </constraints>
+                </view>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="kbr-vd-oFp" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="1VS-id-JtP"/>
+                <constraint firstItem="ZDF-b5-72e" firstAttribute="top" secondItem="kbr-vd-oFp" secondAttribute="bottom" id="SCw-HZ-RID"/>
+                <constraint firstAttribute="bottom" secondItem="ZDF-b5-72e" secondAttribute="bottom" id="USf-YP-b2V"/>
+                <constraint firstAttribute="trailing" secondItem="kbr-vd-oFp" secondAttribute="trailing" id="ZWo-YA-oiF"/>
+                <constraint firstItem="kbr-vd-oFp" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="c9R-zU-pCF"/>
+                <constraint firstAttribute="trailing" secondItem="ZDF-b5-72e" secondAttribute="trailing" id="dfh-sZ-RLH"/>
+                <constraint firstItem="ZDF-b5-72e" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" constant="36" id="j4I-Jv-gj0"/>
+                <constraint firstItem="ZDF-b5-72e" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="u0l-oj-Hqt"/>
+            </constraints>
+            <simulatedStatusBarMetrics key="simulatedStatusBarMetrics" statusBarStyle="lightContent"/>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="datePickView" destination="ZDF-b5-72e" id="OL5-uk-YxY"/>
+            </connections>
+            <point key="canvasLocation" x="353.5" y="259"/>
+        </view>
+    </objects>
+</document>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="KGk-i7-Jjw" customClass="PingZhengCell">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="72"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="375" height="71.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="zBZ-tC-FTt">
+                        <rect key="frame" x="0.0" y="4" width="375" height="67"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="金电小区" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Tuj-2l-DfP">
+                                <rect key="frame" x="6" y="28" width="60" height="18"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="沪A12345" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="qYs-9x-OmK">
+                                <rect key="frame" x="299" y="6" width="68" height="18"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ap1-Wk-hj1">
+                                <rect key="frame" x="287" y="37" width="82" height="24"/>
+                                <color key="backgroundColor" red="0.22352941179999999" green="0.83529411760000005" blue="0.72156862749999995" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="24" id="ULe-hW-4pa"/>
+                                    <constraint firstAttribute="width" constant="82" id="vzV-aA-hXa"/>
+                                </constraints>
+                                <state key="normal" title="查看凭证">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="pingZhengBtnClick:" destination="KGk-i7-Jjw" eventType="touchUpInside" id="xxD-LY-KCr"/>
+                                </connections>
+                            </button>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="优惠停车" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="UHy-LW-8bK">
+                                <rect key="frame" x="6" y="5" width="60" height="18"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                <color key="textColor" red="0.22352941176470587" green="0.83529411764705885" blue="0.72156862745098038" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="支付时间:" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="SF9-qx-J0K">
+                                <rect key="frame" x="7" y="51" width="52" height="15"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="12"/>
+                                <color key="textColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="Tuj-2l-DfP" firstAttribute="top" secondItem="UHy-LW-8bK" secondAttribute="bottom" constant="5" id="4KZ-I9-lTt"/>
+                            <constraint firstAttribute="trailing" secondItem="qYs-9x-OmK" secondAttribute="trailing" constant="8" id="7xB-yp-TPq"/>
+                            <constraint firstItem="qYs-9x-OmK" firstAttribute="top" secondItem="zBZ-tC-FTt" secondAttribute="top" constant="6" id="ChI-gu-HZA"/>
+                            <constraint firstItem="SF9-qx-J0K" firstAttribute="leading" secondItem="zBZ-tC-FTt" secondAttribute="leading" constant="7" id="EN4-T0-Yeu"/>
+                            <constraint firstItem="Tuj-2l-DfP" firstAttribute="leading" secondItem="zBZ-tC-FTt" secondAttribute="leading" constant="6" id="IMM-Kd-loE"/>
+                            <constraint firstItem="SF9-qx-J0K" firstAttribute="top" secondItem="Tuj-2l-DfP" secondAttribute="bottom" constant="5" id="Qs0-LR-1ay"/>
+                            <constraint firstAttribute="bottom" secondItem="ap1-Wk-hj1" secondAttribute="bottom" constant="6" id="YcJ-OJ-U8P"/>
+                            <constraint firstAttribute="trailing" secondItem="ap1-Wk-hj1" secondAttribute="trailing" constant="6" id="a5R-AF-YbI"/>
+                            <constraint firstItem="UHy-LW-8bK" firstAttribute="top" secondItem="zBZ-tC-FTt" secondAttribute="top" constant="5" id="bQ5-V6-vqa"/>
+                            <constraint firstItem="UHy-LW-8bK" firstAttribute="leading" secondItem="zBZ-tC-FTt" secondAttribute="leading" constant="6" id="wxA-R2-SjC"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <color key="backgroundColor" red="0.93333333333333335" green="0.93333333333333335" blue="0.93333333333333335" alpha="1" colorSpace="calibratedRGB"/>
+                <constraints>
+                    <constraint firstAttribute="bottom" secondItem="zBZ-tC-FTt" secondAttribute="bottom" id="2Hf-P5-DnX"/>
+                    <constraint firstItem="zBZ-tC-FTt" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="4" id="2KE-xc-dUy"/>
+                    <constraint firstItem="zBZ-tC-FTt" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" id="XN2-tb-7zz"/>
+                    <constraint firstAttribute="trailing" secondItem="zBZ-tC-FTt" secondAttribute="trailing" id="ak3-dO-6nT"/>
+                </constraints>
+            </tableViewCellContentView>
+            <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="calibratedWhite"/>
+            <connections>
+                <outlet property="bgView" destination="zBZ-tC-FTt" id="RX5-pm-wfQ"/>
+                <outlet property="carNumL" destination="qYs-9x-OmK" id="WLc-qy-NSv"/>
+                <outlet property="parkingNameL" destination="Tuj-2l-DfP" id="5P6-bv-uOZ"/>
+                <outlet property="pingZhengBtn" destination="ap1-Wk-hj1" id="4sa-uR-PdF"/>
+                <outlet property="timeL" destination="SF9-qx-J0K" id="RR5-Dp-s7k"/>
+            </connections>
+            <point key="canvasLocation" x="302.5" y="227"/>
+        </tableViewCell>
+    </objects>
+</document>

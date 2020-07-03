@@ -1,0 +1,384 @@
+//
+//  TimeLineView.m
+//  P-Share
+//
+//  Created by fay on 16/6/16.
+//  Copyright © 2016年 曹亮亮. All rights reserved.
+//
+
+#import "TimeLineView.h"
+#define    rowMargin  14.0f
+#define    colMargin  10.0f
+@interface TimeLineView ()
+{
+    UILabel         *_topLeftLabel;
+    UILabel         *_toprightLabel;
+    UILabel         *_bottomLabel;
+    UIImageView     *_centerImageV;
+    UIButton        *_bottomRightBtn;
+}
+
+@end
+@implementation TimeLineView
+
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    if (self = [super initWithFrame:frame]) {
+        [self setUpSubViews];
+    }
+    
+    return self;
+}
+
+- (void)setUpSubViews
+{
+    self.translatesAutoresizingMaskIntoConstraints = NO;
+    UIImageView *bgImageV = [UIImageView new];
+    _bgImageV = bgImageV;
+    UIImage *image = [UIImage imageNamed:@"prompt_v2"];
+    
+    bgImageV.image = [image stretchableImageWithLeftCapWidth:image.size.width/2 topCapHeight:image.size.height/2 +20];
+    MyLog(@"%lf %lf",image.size.height,image.size.width);
+    [self addSubview:bgImageV];
+    
+    UILabel *topLeftLabel = [MyUtil createLabelFrame:CGRectZero title:@"代泊远接单成功" textColor:[MyUtil colorWithHexString:@"999999"] font:[UIFont boldSystemFontOfSize:15] textAlignment:1 numberOfLine:1];
+    _topLeftLabel = topLeftLabel;
+    
+    UILabel *toprightLabel = [MyUtil createLabelFrame:CGRectZero title:@"17:11" textColor:[MyUtil colorWithHexString:@"999999"] font:[UIFont systemFontOfSize:13] textAlignment:1 numberOfLine:1];
+    _toprightLabel = toprightLabel;
+    
+    UIImageView *centerImageV = [UIImageView new];
+    _centerImageV = centerImageV;
+    centerImageV.layer.cornerRadius = 4;
+    centerImageV.layer.masksToBounds = YES;
+    
+    UILabel *bottomLabel = [MyUtil createLabelFrame:CGRectZero title:@"代泊员:陈学冬 12345678901" textColor:[MyUtil colorWithHexString:@"999999"] font:[UIFont systemFontOfSize:13] textAlignment:1 numberOfLine:0];
+    _bottomLabel = bottomLabel;
+    
+    UIButton *bottomRightBtn = [UIButton new];
+    _bottomRightBtn = bottomRightBtn;
+    bottomRightBtn.layer.cornerRadius = 4;
+    bottomRightBtn.layer.masksToBounds = YES;
+    bottomRightBtn.layer.borderColor = [MyUtil colorWithHexString:@"e0e0e0"].CGColor;
+    bottomRightBtn.layer.borderWidth = 1;
+    [bottomRightBtn setTitleColor:[MyUtil colorWithHexString:@"333333"] forState:(UIControlStateNormal)];
+    bottomRightBtn.titleLabel.font = [UIFont systemFontOfSize:13];
+    [bottomRightBtn setTitle:@"取消订单" forState:(UIControlStateNormal)];
+
+    [self addSubview:_topLeftLabel];
+    [self addSubview:_toprightLabel];
+    [self addSubview:_centerImageV];
+    [self addSubview:_bottomLabel];
+    [self addSubview:_bottomRightBtn];
+    [self setSubViewsLayout];
+    
+}
+//行、列 :Rows, columns,
+- (void)setSubViewsLayout
+{
+
+    [_topLeftLabel mas_updateConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(2 * rowMargin);
+        make.top.mas_equalTo(colMargin);
+        make.width.mas_lessThanOrEqualTo(180);
+    }];
+    
+    [_toprightLabel mas_updateConstraints:^(MASConstraintMaker *make) {
+        make.centerY.mas_equalTo(_topLeftLabel);
+        make.right.mas_equalTo(-rowMargin);
+        make.width.mas_lessThanOrEqualTo(100);
+    }];
+   
+    
+    if (!_centerImageV.hidden) {
+        [_centerImageV mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.leading.mas_equalTo(_topLeftLabel.mas_leading);
+            make.top.mas_equalTo(_topLeftLabel.mas_bottom).offset(colMargin);
+            make.right.mas_equalTo(-rowMargin);
+            make.height.mas_equalTo(_centerImageV.mas_width).multipliedBy(0.42);
+        }];
+        [_bottomLabel mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.leading.mas_equalTo(_topLeftLabel.mas_leading);
+            make.top.mas_equalTo(_centerImageV.mas_bottom).offset(colMargin);
+            
+        }];
+    }else
+    {
+        [_bottomLabel mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.leading.mas_equalTo(_topLeftLabel.mas_leading);
+            make.top.mas_equalTo(_topLeftLabel.mas_bottom).offset(colMargin);
+        }];
+    }
+    
+    
+    
+    [_bottomRightBtn mas_updateConstraints:^(MASConstraintMaker *make) {
+        make.centerY.mas_equalTo(_bottomLabel.mas_centerY);
+        make.right.mas_equalTo(-rowMargin);
+        make.size.mas_equalTo(CGSizeMake(70, 26));
+    }];
+   
+//    [_bgImageV mas_updateConstraints:^(MASConstraintMaker *make) {
+//        
+//        make.bottom.mas_equalTo(_bottomLabel.mas_bottom).offset(10);
+//      
+//    }];
+  
+    
+}
+
+/**
+ TimeLineDaiBoSatusGetOrder,         //接单成功
+ TimeLineDaiBoSatusYanChe,           //代泊远验车(带图片)
+ TimeLineDaiBoSatusGoTopark,         //代泊员前往停车场
+ TimeLineDaiBoSatusParkSuccess,      //车辆存放成功(带图片)
+ TimeLineDaiBoSatusSaveKey,          //钥匙存入密码箱
+ TimeLineDaiBoSatusTimeWillEnd,      //车位服务时间即将结束
+ TimeLineDaiBoSatusPayMoney,         //支付代泊费用
+ TimeLineDaiBoSatusGetCarOrderSuccess,//取车派单成功
+ TimeLineDaiBoSatusGetCaring,        //代泊远取车中
+ TimeLineDaiBoSatusGetCarSuccess,    //车辆到达指定位置
+ TimeLineDaiBoSatusEnd               //代泊服务结束 (立即评价)
+ */
+- (void)setTimeLineDaiBoSatus:(TimeLineDaiBoSatus)timeLineDaiBoSatus
+{
+    if (_timeLinePayStyle != TimeLineViewPayTypeDaiBo) {
+        return;
+    }
+    
+    _timeLineDaiBoSatus = timeLineDaiBoSatus;
+    _centerImageV.hidden = YES;
+    _bottomRightBtn.hidden = YES;
+    
+    switch (timeLineDaiBoSatus) {
+        case TimeLineDaiBoSatusYanChe:
+        {
+            _topLeftLabel.text = @"代泊员验车";
+            _centerImageV.hidden = NO;
+
+            _centerImageV.image = [UIImage imageNamed:@"defaultImage_v2"];
+           
+        }
+            
+            break;
+            
+        case TimeLineDaiBoSatusParkSuccess:
+        {
+            _topLeftLabel.text = @"爱车已存放妥当";
+            _centerImageV.image = [UIImage imageNamed:@"defaultImage_v2"];
+            _centerImageV.hidden = NO;
+
+        }
+            
+            break;
+            
+        case TimeLineDaiBoSatusGetOrder:
+        {
+            _bottomRightBtn.hidden = NO;
+            _topLeftLabel.text = @"代泊员接车成功";
+            [_bottomRightBtn setTitle:@"取消订单" forState:(UIControlStateNormal)];
+
+        }
+            
+            break;
+            
+        case TimeLineDaiBoSatusTimeWillEnd:
+        {
+            _bottomRightBtn.hidden = NO;
+            _topLeftLabel.text = @"取车时间即将结束";
+
+            [_bottomRightBtn setTitle:@"一键取车" forState:(UIControlStateNormal)];
+
+        }
+            
+            break;
+            
+        case TimeLineDaiBoSatusPayMoney:
+        {
+            _bottomRightBtn.hidden = NO;
+            _topLeftLabel.text = @"代泊费用:30元";
+
+            [_bottomRightBtn setTitle:@"立即支付" forState:(UIControlStateNormal)];
+
+        }
+            
+            break;
+            
+        case TimeLineDaiBoSatusEnd:
+        {
+            _bottomRightBtn.hidden = NO;
+            [_bottomRightBtn setTitle:@"立即评价" forState:(UIControlStateNormal)];
+
+        }
+            
+            break;
+            
+        default:
+        {
+            
+        }
+            break;
+    }
+    
+   if (!_centerImageV.hidden) {
+       [_centerImageV mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.leading.mas_equalTo(_topLeftLabel.mas_leading);
+            make.top.mas_equalTo(_topLeftLabel.mas_bottom).offset(colMargin);
+            make.right.mas_equalTo(-rowMargin);
+            make.height.mas_equalTo(_centerImageV.mas_width).multipliedBy(0.42);
+        }];
+        [_bottomLabel mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.leading.mas_equalTo(_topLeftLabel.mas_leading);
+            make.top.mas_equalTo(_centerImageV.mas_bottom).offset(colMargin);
+            
+        }];
+    }else
+    {
+        [_bottomLabel mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.leading.mas_equalTo(_topLeftLabel.mas_leading);
+            make.top.mas_equalTo(_topLeftLabel.mas_bottom).offset(colMargin);
+        }];
+    }
+    
+    
+    
+    [_bottomRightBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
+        make.centerY.mas_equalTo(_bottomLabel.mas_centerY);
+        make.right.mas_equalTo(-rowMargin);
+        make.size.mas_equalTo(CGSizeMake(70, 26));
+    }];
+    
+
+    [_bgImageV mas_remakeConstraints:^(MASConstraintMaker *make) {
+//        make.edges.mas_equalTo(UIEdgeInsetsZero);
+
+        make.top.left.right.mas_equalTo(0);
+        
+        make.bottom.mas_equalTo(_bottomLabel.mas_bottom).offset(10);
+    }];
+
+    [self layoutSubviews];
+    [_bgImageV layoutIfNeeded];
+    
+    MyLog(@"+_bgImageV.frame.size.height+++++++%lf",_bgImageV.frame.size.height);
+    
+}
+/**
+ TimeLineYuYueSatusStart,//开始预约
+ TimeLineYuYueSatusYuYueSuccess,//预约成功
+ TimeLineYuYueSatusPingZhengInPark,//凭证入场
+ TimeLineYuYueSatusTimeWillEnd,//时间即将结束
+ TimeLineYuYueSatusPingZhengOutPark,//凭证出场
+ TimeLineYuYueSatusEnd//服务结束 (立即评价)
+ */
+- (void)setTimeLineYuYueSatus:(TimeLineYuYueSatus)timeLineYuYueSatus
+{
+    if (_timeLinePayStyle != TimeLineViewPayTypeYuYueParking) {
+        return;
+    }
+    _timeLineYuYueSatus = timeLineYuYueSatus;
+    _bottomRightBtn.hidden = YES;
+    switch (timeLineYuYueSatus) {
+        case TimeLineYuYueSatusStart:
+        {
+            _topLeftLabel.text = @"预约昼锦路停车场车位";
+            _toprightLabel.text = @"17:00";
+            _bottomLabel.hidden = YES;
+            
+        }
+            break;
+            
+        case TimeLineYuYueSatusYuYueSuccess:
+        {
+            _topLeftLabel.text = @"预约车位成功";
+            _bottomLabel.text = @"停车码:12-23-55";
+            _toprightLabel.text = @"17:00";
+            _bottomRightBtn.hidden = NO;
+            _bottomLabel.hidden = NO;
+            [_bottomRightBtn setTitle:@"查看凭证" forState:(UIControlStateNormal)];
+
+        }
+            break;
+            
+        case TimeLineYuYueSatusPingZhengInPark:
+        {
+            _topLeftLabel.text = @"凭证入场确认";
+            _toprightLabel.text = @"17:00";
+            _bottomLabel.hidden = YES;
+
+        }
+            break;
+            
+        case TimeLineYuYueSatusTimeWillEnd:
+        {
+            _topLeftLabel.text = @"停车时间将于9:00结束";
+            _bottomLabel.text = @"还有30分钟到期";
+            _toprightLabel.text = @"17:00";
+            _bottomRightBtn.hidden = NO;
+            _bottomLabel.hidden = NO;
+
+            [_bottomRightBtn setTitle:@"立即延期" forState:(UIControlStateNormal)];
+        }
+            break;
+            
+        case TimeLineYuYueSatusPingZhengOutPark:
+        {
+            _topLeftLabel.text = @"凭证出场确认";
+            _toprightLabel.text = @"17:00";
+            _bottomLabel.hidden = YES;
+
+        }
+            break;
+            
+        case TimeLineYuYueSatusEnd:
+        {
+            _topLeftLabel.text = @"服务已顺利结束";
+            _bottomLabel.text = @"任何建议与吐槽我们都竭诚欢迎";
+            _toprightLabel.text = @"17:00";
+            _bottomRightBtn.hidden = NO;
+            _bottomLabel.hidden = NO;
+
+            [_bottomRightBtn setTitle:@"立即评价" forState:(UIControlStateNormal)];
+            
+        }
+            break;
+        default:
+            break;
+    }
+    
+    if (_bottomLabel.hidden) {
+        [_toprightLabel mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.centerY.mas_equalTo(self);
+        }];
+        
+    }else
+    {
+        [_toprightLabel mas_updateConstraints:^(MASConstraintMaker *make) {
+            make.top.mas_equalTo(20);
+        }];
+        [_bottomLabel mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.leading.mas_equalTo(_topLeftLabel.mas_leading);
+            make.top.mas_equalTo(_topLeftLabel.mas_bottom).offset(colMargin);
+        }];
+        
+        [_bottomRightBtn mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.centerY.mas_equalTo(_bottomLabel.mas_centerY);
+            make.right.mas_equalTo(-rowMargin);
+            make.size.mas_equalTo(CGSizeMake(70, 26));
+        }];
+    }
+
+    
+    [_bgImageV mas_remakeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(UIEdgeInsetsZero);
+    }];
+    
+    
+    
+}
+- (void)setTimeLinePayStyle:(TimeLineViewPayType)timeLinePayStyle
+{
+    _timeLinePayStyle = timeLinePayStyle;
+    
+}
+@end

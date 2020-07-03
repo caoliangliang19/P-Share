@@ -1,0 +1,128 @@
+//
+//  SelectView.m
+//  选择tableView
+//
+//  Created by 亮亮 on 16/9/5.
+//  Copyright © 2016年 亮亮. All rights reserved.
+//
+//屏幕宽、高
+#define SCREEN_WIDTH  ([UIScreen mainScreen].bounds.size.width)
+#define SCREEN_HEIGHT ([UIScreen mainScreen].bounds.size.height)
+
+
+#import "SelectView.h"
+
+
+@interface SelectView ()
+{
+    UIView *_bgView;
+    UIView *_anView;
+}
+@property (nonatomic,strong)UIViewController *controller;
+
+
+
+@end
+
+@implementation SelectView
+- (instancetype)initWithController:(UIViewController *)pearentVC{
+    if (self = [super init]) {
+        self.backgroundColor = [UIColor clearColor];
+        self.frame = CGRectMake(0, 0, SCREEN_WIDTH, 40);
+        [pearentVC.view addSubview:self];
+    }
+    return self;
+}
+- (void)setSelectArray:(NSMutableArray *)selectArray{
+    _selectArray = selectArray;
+    [self createUI];
+}
+- (void)createUI{
+    if (!_bgView) {
+        _bgView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 40)];
+        _bgView.backgroundColor = [UIColor colorWithHexString:@"fcfcfc"];
+        [self addSubview:_bgView];
+    }
+    CGFloat width = SCREEN_WIDTH/_selectArray.count;
+    for (NSInteger i = 0; i < _selectArray.count; i++) {
+        UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+        button.backgroundColor = [UIColor clearColor];
+        button.frame = CGRectMake(width*i, 0, width, 40);
+        if (_selectArray.count == 1) {
+            [button setTitleColor:[UIColor colorWithHexString:@"39d5b8"] forState:(UIControlStateNormal)];
+        }else{
+           if (i == 0) {
+               [button setTitleColor:[UIColor colorWithHexString:@"333333"] forState:UIControlStateNormal];
+           }else{
+               [button setTitleColor:[UIColor colorWithHexString:@"696969"] forState:UIControlStateNormal];
+           }
+        }
+        
+        [button setTitle:_selectArray[i] forState:UIControlStateNormal];
+        button.tag = 100+i;
+        button.titleLabel.font = [UIFont systemFontOfSize:15];
+        [button addTarget:self action:@selector(clickButton:) forControlEvents:(UIControlEventTouchUpInside)];
+        [_bgView addSubview:button];
+        if (i < _selectArray.count-1) {
+            UIView *lineView = [[UIView alloc]initWithFrame:CGRectMake(width-1, 5, 1, 30)];
+            lineView.backgroundColor = [UIColor colorWithHexString:@"e0e0e0"];
+            [button addSubview:lineView];
+        }
+       
+    }
+  
+    
+    _anView = [[UIView alloc]initWithFrame:CGRectMake(0, 38, width, 2)];
+   
+    
+    if (_selectArray.count == 1) {
+        _anView.frame = CGRectMake(0, 39, width, 1);
+        _anView.backgroundColor = [UIColor colorWithHexString:@"696969"];
+    }else{
+        _anView.backgroundColor = [UIColor colorWithHexString:@"39d5b8"];
+    }
+    [self addSubview:_anView];
+}
+- (void)setSelectIndex:(NSInteger)selectIndex{
+    CGFloat width = SCREEN_WIDTH/_selectArray.count;
+    [UIView animateWithDuration:0.3 animations:^{
+        _anView.frame = CGRectMake(width*(selectIndex-1), 38, width, 2);
+    }];
+    for (NSInteger i = 0; i < _selectArray.count; i ++) {
+        UIButton *button = [self viewWithTag:100+i];
+        if (i == selectIndex-1) {
+            [button setTitleColor:[UIColor colorWithHexString:@"333333"] forState:UIControlStateNormal];
+        }else{
+            [button setTitleColor:[UIColor colorWithHexString:@"696969"] forState:UIControlStateNormal];
+        }
+    }
+}
+- (void)clickButton:(UIButton *)button{
+    if (_selectArray.count != 1) {
+        [UIView animateWithDuration:0.3 animations:^{
+            CGRect frame = CGRectMake(button.frame.origin.x, 38, button.frame.size.width, 2);
+            _anView.frame = frame;
+        }];
+        for (NSInteger i = 0; i < _selectArray.count; i++) {
+            UIButton *myButton = [self viewWithTag:100+i];
+            if (i == button.tag-100) {
+                 [myButton setTitleColor:[UIColor colorWithHexString:@"333333"] forState:(UIControlStateNormal)];
+            }else{
+                 [myButton setTitleColor:[UIColor colorWithHexString:@"696969"] forState:(UIControlStateNormal)];
+            }
+         }
+         if ([self.delegate respondsToSelector:@selector(selectBtn:)]) {
+            [self.delegate selectBtn:button];
+        }
+    }
+    
+}
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+
+@end

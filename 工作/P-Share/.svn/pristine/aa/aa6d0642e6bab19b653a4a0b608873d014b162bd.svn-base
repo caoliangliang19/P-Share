@@ -1,0 +1,93 @@
+//
+//  WebView.m
+//  KouDaiYun
+//
+//  Created by fay on 16/8/17.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "FayWebView.h"
+@interface FayWebView()<UIWebViewDelegate>
+{
+    
+}
+@end
+@implementation FayWebView
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    if (self == [super initWithFrame:frame]) {
+        [self setUpWebView];
+    }
+    return self;
+}
+
+- (void)setUpWebView
+{
+    UIWebView *webView = [[UIWebView alloc] init];
+    webView.backgroundColor= KBG_COLOR;
+    webView.delegate = self;
+    [webView setScalesPageToFit:YES];
+    _webView = webView;
+    [self addSubview:webView];
+    [webView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(UIEdgeInsetsZero);
+    }];
+}
+
+
+- (void)setWebModel:(WebInfoModel *)webModel
+{
+    _webModel = webModel;
+    NSURL *URL;
+    if (webModel.urlType == URLTypeNetLocalData) {
+        self.webView.scalesPageToFit = YES;
+        NSData *data = [NSData dataWithContentsOfFile:webModel.url];
+        [self.webView loadData:data MIMEType:@"text/plain" textEncodingName:@"UTF-8" baseURL:[NSURL URLWithString:@""]];
+        
+    }else if (webModel.urlType == URLTypeNetLocal)
+    {
+        URL = [NSURL fileURLWithPath:webModel.url];
+        self.webStatus = WebViewStatusStartLoad;
+        NSURLRequest *request = [NSURLRequest requestWithURL:URL];
+        [_webView loadRequest:request];
+    }else{
+        
+        URL = [NSURL URLWithString:webModel.url];
+        self.webStatus = WebViewStatusStartLoad;
+        NSURLRequest *request = [NSURLRequest requestWithURL:URL];
+        [_webView loadRequest:request];
+        
+    }
+   
+}
+
+#pragma mark -- webViewDelegate
+
+- (void)webViewDidStartLoad:(UIWebView *)webView
+{
+    MyLog(@"webViewDidStartLoad");
+    self.webStatus = WebViewStatusLoading;
+
+}
+- (void)webViewDidFinishLoad:(UIWebView *)webView
+{
+    MyLog(@"webViewDidFinishLoad");
+    self.webStatus = WebViewStatusEndLoad;
+
+
+}
+- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
+{
+    MyLog(@"didFailLoadWithError");
+    self.webStatus = WebViewStatusEndLoad;
+
+}
+
+- (void)setWebStatus:(WebViewStatus)webStatus
+{
+    _webStatus = webStatus;
+    if (self.webViewLoadStatus) {
+        self.webViewLoadStatus(webStatus);
+    }
+}
+@end

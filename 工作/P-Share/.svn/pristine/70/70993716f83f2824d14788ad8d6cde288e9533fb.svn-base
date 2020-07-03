@@ -1,0 +1,25 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "acc79f6d-110f-4c95-a1c3-91b85286f091++3947",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+    "acc79f6d-110f-4c95-a1c3-91b85286f091++3947" : {
+
+    }
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "acc79f6d-110f-4c95-a1c3-91b85286f091++3947" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "CC34A18A-74A8-4344-9B12-BE0ED2534086",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "acc79f6d-110f-4c95-a1c3-91b85286f091++3947" : "P-Share\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "P-SHARE",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "Branch\/P-Share-Test\/P-SHARE.xcworkspace",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "svn:\/\/fay.fan@192.168.1.160:9999\/repos",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Subversion",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "acc79f6d-110f-4c95-a1c3-91b85286f091++3947"
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+//
+//  ShareEnginee.m
+//  P-SHARE
+//
+//  Created by fay on 16/9/13.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "ShareEnginee.h"
+#import "ShareModel.h"
+#import "WXApi.h"
+#import <TencentOpenAPI/TencentOAuth.h>
+#import <TencentOpenAPI/QQApiInterface.h>
+#import "QQTool.h"
+@interface ShareEnginee()
+{
+    QQTool *_qqTool;
+}
+@end
+@implementation ShareEnginee
++ (void)shareActivityWith:(ShareModel *)shareModel shareType:(NSInteger)type
+{
+    if (type == 0) {
+        [[ShareEnginee new] QQShareWith:shareModel];
+    }else if (type == 1 || type == 2){
+        [[ShareEnginee new] WechatShareWith:shareModel type:type];
+    }
+}
+
+#pragma mark -- qq分享
+- (void)QQShareWith:(ShareModel *)shareModel
+{
+    //            QQ分享
+    if (!_qqTool) {
+        _qqTool = [QQTool new];
+    }
+    [_qqTool QQBegin];
+    
+    NSURL* url = [NSURL URLWithString:shareModel.url];
+
+    QQApiNewsObject* obj;
+    if (![UtilTool isBlankString:shareModel.imagePath]) {
+        NSURL *previewURL = [NSURL URLWithString:shareModel.imagePath];
+        obj = [QQApiNewsObject objectWithURL:url title:shareModel.title description:shareModel.describute previewImageURL:previewURL];
+    }else
+    {
+        obj = [QQApiNewsObject objectWithURL:url title:shareModel.title description:shareModel.describute previewImageData:UIImagePNGRepresentation([UIImage imageNamed:@"logoPshare"])];
+               
+    }
+    SendMessageToQQReq* req = [SendMessageToQQReq reqWithContent:obj];
+    
+    QQApiSendResultCode send = [QQApiInterface sendReq:req];
+    [self handleSendResult:send];
+    
+}
+- (void)handleSendResult:(QQApiSendResultCode)sendResult
+{
+    switch (sendResult)
+    {
+        case EQQAPIAPPNOTREGISTED:
+        {
+            UIAlertView *msgbox = [[UIAlertView alloc] initWithTitle:@"Error" message:@"App未注册" delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:nil];
+            [msgbox show];
+            
+            
+            break;
+        }
+        case EQQAPIMESSAGECONTENTINVALID:
+        case EQQAPIMESSAGECONTENTNULL:
+        case EQQAPIMESSAGETYPEINVALID:
+        {
+            UIAlertView *msgbox = [[UIAlertView alloc] initWithTitle:@"Error" message:@"发送参数错误" delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:nil];
+            [msgbox show];
+            
+            
+            break;
+        }
+        case EQQAPIQQNOTINSTALLED:
+        {
+            UIAlertView *msgbox = [[UIAlertView alloc] initWithTitle:@"Error" message:@"未安装QQ" delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:nil];
+            [msgbox show];
+            
+            
+            break;
+        }
+        case EQQAPIQQNOTSUPPORTAPI:
+        {
+            UIAlertView *msgbox = [[UIAlertView alloc] initWithTitle:@"Error" message:@"未安装QQ" delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:nil];
+            [msgbox show];
+            
+            
+            break;
+        }
+        case EQQAPISENDFAILD:
+        {
+            UIAlertView *msgbox = [[UIAlertView alloc] initWithTitle:@"Error" message:@"发送失败" delegate:nil cancelButtonTitle:@"取消" otherButtonTitles:nil];
+            [msgbox show];
+            
+            
+            break;
+        }
+            
+        default:
+        {
+            break;
+        }
+    }
+}
+
+
+
+#pragma mark -- 微信分享
+- (void)WechatShareWith:(ShareModel *)shareModel type:(NSInteger)type
+{
+    if ([WXApi isWXAppInstalled] && [WXApi isWXAppSupportApi]) {
+        SendMessageToWXReq* req = [[SendMessageToWXReq alloc] init];
+        req.bText = NO;
+        WXMediaMessage *urlMessage = [WXMediaMessage message];
+        urlMessage.title = shareModel.title;
+        urlMessage.description = shareModel.describute;
+        
+        [urlMessage setThumbImage: [UIImage imageNamed:@"logoPshare"]];
+        WXWebpageObject *webObject = [WXWebpageObject object];
+        webObject.webpageUrl = shareModel.url;
+        urlMessage.mediaObject = webObject;
+        req.message = urlMessage;
+        
+        if (type == 1) {
+            req.scene = WXSceneSession; //选择发送到朋友圈WXSceneTimeline，默认值为WXSceneSession发送到会话
+        }else if (type == 2){
+            req.scene = WXSceneTimeline; //选择发送到朋友圈WXSceneTimeline，默认值为WXSceneSession发送到会话
+
+        }
+            [WXApi sendReq:req];
+    }else{
+        [[GroupManage shareGroupManages] groupAlertShowWithTitle:@"您未安装微信或版本不支持"];
+
+        MyLog(@"您未安装微信或版本不支持");
+        
+    }
+
+}
+
+
+@end

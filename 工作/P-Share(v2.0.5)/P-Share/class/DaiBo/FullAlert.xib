@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="14490.70" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" colorMatched="YES">
+    <device id="retina6_1" orientation="portrait">
+        <adaptation id="fullscreen"/>
+    </device>
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14490.49"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view contentMode="scaleToFill" id="iN0-l3-epB" customClass="FullAlert">
+            <rect key="frame" x="0.0" y="0.0" width="281" height="270"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="选择停车场" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Uip-zd-Cpu">
+                    <rect key="frame" x="0.0" y="0.0" width="281" height="50"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="50" id="U1j-hE-tLC"/>
+                    </constraints>
+                    <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                    <color key="textColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <nil key="highlightedColor"/>
+                </label>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="SxI-0a-FoU">
+                    <rect key="frame" x="0.0" y="50" width="281" height="1"/>
+                    <color key="backgroundColor" red="0.59999999999999998" green="0.59999999999999998" blue="0.59999999999999998" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="1" id="mgE-sd-GTE"/>
+                    </constraints>
+                </view>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="RUE-aM-lJM">
+                    <rect key="frame" x="0.0" y="51" width="281" height="219"/>
+                    <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                </tableView>
+            </subviews>
+            <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+            <constraints>
+                <constraint firstAttribute="bottom" secondItem="RUE-aM-lJM" secondAttribute="bottom" id="0gb-bk-EB0"/>
+                <constraint firstAttribute="trailing" secondItem="SxI-0a-FoU" secondAttribute="trailing" id="0jf-75-bFz"/>
+                <constraint firstItem="RUE-aM-lJM" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="1Pl-3l-P0j"/>
+                <constraint firstItem="Uip-zd-Cpu" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="DSR-uw-QhP"/>
+                <constraint firstItem="Uip-zd-Cpu" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="DWH-LE-dii"/>
+                <constraint firstAttribute="trailing" secondItem="Uip-zd-Cpu" secondAttribute="trailing" id="Lfn-JO-bte"/>
+                <constraint firstItem="RUE-aM-lJM" firstAttribute="top" secondItem="SxI-0a-FoU" secondAttribute="bottom" id="NUd-qR-78w"/>
+                <constraint firstItem="Uip-zd-Cpu" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="SK4-kE-NrT"/>
+                <constraint firstItem="Uip-zd-Cpu" firstAttribute="top" secondItem="iN0-l3-epB" secondAttribute="top" id="cx5-TE-wUc"/>
+                <constraint firstItem="SxI-0a-FoU" firstAttribute="top" secondItem="Uip-zd-Cpu" secondAttribute="bottom" id="fV5-Q5-yOb"/>
+                <constraint firstItem="SxI-0a-FoU" firstAttribute="leading" secondItem="iN0-l3-epB" secondAttribute="leading" id="gZF-ZE-8pG"/>
+                <constraint firstAttribute="trailing" secondItem="RUE-aM-lJM" secondAttribute="trailing" id="stL-Q2-YoB"/>
+                <constraint firstAttribute="trailing" secondItem="Uip-zd-Cpu" secondAttribute="trailing" id="ywS-bc-6Xa"/>
+            </constraints>
+            <simulatedStatusBarMetrics key="simulatedStatusBarMetrics" statusBarStyle="lightContent"/>
+            <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
+            <connections>
+                <outlet property="alertTableView" destination="RUE-aM-lJM" id="7Sp-fc-Q6u"/>
+            </connections>
+            <point key="canvasLocation" x="287.5" y="335"/>
+        </view>
+    </objects>
+</document>

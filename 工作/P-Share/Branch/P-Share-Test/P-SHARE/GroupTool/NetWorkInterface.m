@@ -1,0 +1,200 @@
+//
+//  NetWorkInterface.m
+//  P-SHARE
+//
+//  Created by fay on 16/8/30.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "NetWorkInterface.h"
+
+@implementation NetWorkInterface
+
+NSString *const SERVERERROR             = @"数据获取失败";
+NSString *const NETWORKINGERROE         = @"网络连接失败";
+NSString *const VERSION                 = @"version";
+NSString *const ERROR_INFO              = @"errorInfo";
+NSString *const ERROR_NUM               = @"errorNum";
+NSString *const SYSUSER_ID              = @"sysUserId";
+NSString *const USER_NAME               = @"userName";
+
+#pragma mark --- 服务器地址
+NSString *const KDEBUG_SERVER_URL           = @"https://wxtest.i-ubo.com/share/";
+
+NSString *const KRELEASE_SERVER_URL         = @"http://139.196.12.103/share/";
+
+#ifdef DEBUG
+
+NSString *const SERVER_URL                  = @"https://wxtest.i-ubo.com/share/";
+
+#else
+
+NSString *const SERVER_URL                  = @"http://139.196.12.103/share/";
+
+#endif
+
+NSString *const searchParkListByLL          = @"app/parker/searchParkListByLL";
+
+NSString *const WECHAT_APPKEY                = @"wx7248073ee8171c2b";
+
+NSString *const GAODE_APPKEY                = @"b3dd200e6f1e3c78c0fdb3dac452ecae";
+
+NSString *const QQ_APPKEY                   = @"1105233032";
+
+NSString *const SECRET_KEY                  = @"Boxiang2016";
+
+NSString *const getParkingStatus            = @"app/parking/getParkingStatus";
+
+NSString *const temporarycarlist            = @"app/temporary/carlist";
+
+NSString *const getMonthlyEquity            = @"app/car/getMonthlyEquity";
+
+NSString *const KMONTHLY                    = @"monthly";
+
+NSString *const KLINTING                    = @"linTing";
+
+NSString *const KEQUITY                     = @"equity";
+
+NSString *const tenseTime                   = @"app/parking/tenseTime";
+
+NSString *const queryParkerById             = @"app/parker/queryParkerById";
+
+NSString *const queryOrderDetail             = @"app/order/queryOrderDetail";
+
+NSString *const getIsParking                = @"app/parking/getIsParking";
+
+NSString *const queryVoucherPage            = @"app/customer/queryVoucherPage";
+
+NSString *const sendSmsCode                 = @"app/customer/sendSmsCode";
+
+NSString *const loginByVerifyCode           = @"app/customer/loginByVerifyCode";
+
+NSString *const indexShow                   = @"app/parker/indexShow";
+
+NSString *const reservedParking             = @"app/parking/reservedParking";
+
+NSString *const choseWeek                   = @"app/parking/choseWeek";
+
+NSString *const orderc                      = @"app/order/orderc";
+
+NSString *const queryCollection             = @"app/customer/queryCollection";
+
+NSString *const deleteCollection            = @"app/customer/deleteCollection";
+
+NSString *const saveCollection              = @"app/customer/saveCollection";
+
+NSString *const cusFindAllParking           = @"app/parker/cusFindAllParking";
+
+NSString *const setDefaultScan              = @"app/parker/setDefaultScan";
+
+NSString *const parkinglist                 = @"app/carsteward/livecar/parkinglist";
+
+NSString *const gaindefaultcar              = @"app/carsteward/livecar/gaindefaultcar";
+
+NSString *const defaultcar                  = @"app/carsteward/livecar/defaultcar";
+
+NSString *const gaincarbrand                = @"app/carsteward/livecar/gaincarbrand";
+
+NSString *const gaincartrade                = @"app/carsteward/livecar/gaincartrade";
+
+NSString *const gaincardisplacement         = @"app/carsteward/livecar/gaincardisplacement";
+
+NSString *const bindingcar                  = @"app/carsteward/livecar/bindingcar";
+
+NSString *const gainbindingcar              = @"app/carsteward/livecar/gainbindingcar";
+
+NSString *const loginByOtherV2              = @"app/customer/loginByOtherV2";
+
+NSString *const bondByOtherV2               = @"app/customer/bondByOtherV2";
+
+NSString *const updateCustomerInfo          = @"other/customer/updateCustomerInfo";
+
+NSString *const deleteCar                   = @"app/car/delete";
+
+NSString *const CommitApp                   = @"app/customer/CommitApp";
+
+NSString *const getCouponList               = @"app/coupon/getCouponList";
+
+NSString *const queryActivity               = @"app/carLifeActivity/queryActivity";
+
+NSString *const gainupkeep                  = @"app/carsteward/livecar/gainupkeep";
+
+NSString *const getQiyuId                   = @"app/parking/carLov/getQiyuId";
+
+NSString *const modtravlleddistance         = @"app/carsteward/livecar/modtravlleddistance";
+
+NSString *const getParkingList              = @"app/parking/carLov/getParkingList";
+
+NSString *const getCarlovQRCode             = @"app/parking/carLov/getCarlovQRCode";
+
+NSString *const getParking                  = @"app/parker/getParking";
+
+NSString *const queryAllOrder               = @"app/order/queryAllOrder";
+
+NSString *const cancelOrder                 = @"app/order/cancelOrder";
+
+NSString *const orderDetail                 = @"app/myaccount/orderdetail";
+
+NSString *const rechargelist                = @"app/order/rechargelist";
+
+NSString *const consumlist                  = @"app/order/consumlist";
+
+NSString *const getMoney                    = @"app/customer/getMoney";
+
+NSString *const getRult                     = @"app/customer/getRule";
+
+NSString *const calcGiftAmount              = @"app/order/calcGiftAmount";
+
+NSString *const PAID                        = @"app/order/paid";
+
+NSString *const getLatestInvoiceInfo        = @"app/order/getLatestInvoiceInfo";
+
+NSString *const postInvoiceInfo             = @"app/order/postInvoiceInfo";
+
+NSString *const reqpay                      = @"app/order/reqpay";
+
+NSString *const walletPay                   = @"app/order/walletPay";
+
+NSString *const paidOrder                   = @"app/order/paidOrder";
+
+NSString *const cancel                      = @"app/order/cancel";
+
+NSString *const Info                        = @"app/myaccount/info";
+
+NSString *const paid                        = @"app/order/paid";
+
+NSString *const orderdetail                 = @"app/myaccount/orderdetail";
+
+NSString *const submit                      = @"app/comment/submit";
+
+NSString *const queryByOrderId              = @"app/comment/queryByOrderId";
+
+NSString *const receiveCoupon               = @"app/coupon/receiveCoupon";
+
+NSString *const updateImage                 = @"other/customer/updateImage";
+
+NSString *const modcanusedate               = @"app/carsteward/livecar/modcanusedate";
+
+NSString *const adverList                   = @"app/advertising/adverList";
+
+NSString *const useCoupon                   = @"app/order/useCoupon";
+
+NSString *const calcParkPrice               = @"app/parker/calcParkPrice";
+
+NSString *const questionnairec              = @"app/parker/questionnairec";
+
+NSString *const questionnairelist           = @"app/parker/questionnairelist";
+
+NSString *const gettingCar                  = @"app/parker/gettingCar";
+
+NSString *const orderlist                   = @"app/myaccount/orderlist";
+
+NSString *const queryFinishParkOrder        = @"app/parker/queryFinishParkOrder";
+
+NSString *const validatecode                = @"app/customer/validatecode";
+
+NSString *const resetPayPassword            = @"app/customer/resetPayPassword";
+
+NSString *const parkingvalidatecode                = @"app/parking/validatecode";
+
+@end

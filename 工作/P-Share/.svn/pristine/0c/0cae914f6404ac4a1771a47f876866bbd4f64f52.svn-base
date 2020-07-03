@@ -1,0 +1,245 @@
+//
+//  ParkingListVC.m
+//  P-SHARE
+//
+//  Created by fay on 16/9/7.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "ParkingListVC.h"
+#import "ParkingListCell.h"
+@interface ParkingListVC ()<UITableViewDelegate,UITableViewDataSource>
+{
+    UITableView     *_tableView;
+    NSMutableArray  *_dataArray;
+    
+}
+@property (nonatomic,assign)NSInteger   index;
+@end
+
+@implementation ParkingListVC
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.automaticallyAdjustsScrollViewInsets = YES;
+    _index = 1;
+}
+- (void)loadTableView
+{
+    _tableView = [[UITableView alloc] initWithFrame:CGRectZero style:(UITableViewStylePlain)];
+    _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    [self.view addSubview:_tableView];
+    [_tableView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(UIEdgeInsetsZero);
+    }];
+    [_tableView registerNib:[UINib nibWithNibName:@"ParkingListCell" bundle:nil] forCellReuseIdentifier:@"ParkingListCell"];
+    _tableView.delegate = self;
+    _tableView.dataSource = self;
+    _tableView.rowHeight = 58.0f;
+    WS(ws)
+    _tableView.mj_header = [MJRefreshNormalHeader headerWithRefreshingBlock:^{
+         ws.index = 1;
+        [ws loadDataWithIndex:ws.index];
+        
+    }];
+    
+    _tableView.mj_footer = [MJRefreshBackNormalFooter footerWithRefreshingBlock:^{
+        ws.index ++;
+        [ws loadDataWithIndex:ws.index];
+    }];
+    [_tableView.mj_header beginRefreshing];
+
+    
+}
+
+
+//
+- (void)loadDataWithIndex:(NSInteger)index
+{
+    if (!_dataArray) {
+        _dataArray = [NSMutableArray array];
+    }
+    if (_style == ParkingListVCStyleAllParking) {
+        [self allParkingListWithIndex:index];
+    }else
+    {
+        [self carLiftParkingWithIndex:index];
+    }
+    
+    
+    
+}
+#pragma mark -- 获取爱车生活车厂
+- (void)carLiftParkingWithIndex:(NSInteger)index
+{
+    NSString *pageIndex = [NSString stringWithFormat:@"%ld",index];
+    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"2.0.2",@"version",pageIndex,@"pageIndex", nil];
+    [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(getParkingList) WithDic:dict needEncryption:YES needAlert:YES showHud:NO success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        MyLog(@"%@",responseObject);
+        
+        if (_index == 1) {
+            [_dataArray removeAllObjects];
+        }
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            for (NSDictionary *dic in responseObject[@"data"]) {
+                Parking *parking = [Parking shareObjectWithDic:dic];
+                [_dataArray addObject:parking];
+            }
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self endRefresh];
+                [_tableView reloadData];
+            });
+        });
+        
+    } error:^(NSString *error) {
+        [self endRefresh];
+    } failure:^(NSString *fail) {
+        [self endRefresh];
+    }];
+    
+    
+    
+}
+#pragma mark -- 获取全部车厂
+- (void)allParkingListWithIndex:(NSInteger)index
+{
+    NSString *summary = [[NSString stringWithFormat:@"%@%ld%@%@",[UtilTool getCustomId],index,@"1.3.7",SECRET_KEY] MD5];
+    NSString *url = [NSString stringWithFormat:@"%@/%@/%ld/%@/%@",APP_URL(cusFindAllParking),[UtilTool getCustomId],index,@"1.3.7",summary];
+    [NetWorkEngine getRequestUse:(self) WithURL:url WithDic:nil needAlert:YES showHud:NO success:^(NSURLSessionDataTask *task, id responseObject) {
+        MyLog(@"%@",responseObject);
+        
+        if (_index == 1) {
+            [_dataArray removeAllObjects];
+        }
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            for (NSDictionary *dic in responseObject[@"mapList"]) {
+                Parking *parking = [Parking shareObjectWithDic:dic];
+                [_dataArray addObject:parking];
+            }
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [self endRefresh];
+                [_tableView reloadData];
+            });
+        });
+        
+    } error:^(NSString *error) {
+        MyLog(@"%@",error);
+        [self endRefresh];
+        
+    } failure:^(NSString *fail) {
+        MyLog(@"%@",fail);
+        [self endRefresh];
+        
+    }];
+
+}
+
+- (void)endRefresh
+{
+    [_tableView.mj_header endRefreshing];
+    [_tableView.mj_footer endRefreshing];
+}
+- (void)setStyle:(ParkingListVCStyle)style
+{
+    _style = style;
+    [self loadTableView];
+
+    if (style == ParkingListVCStyleAllParking) {
+        self.title = @"首页停车场设置";
+    }else
+    {
+        self.title = @"选择停车场";
+    }
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return _dataArray.count;
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    ParkingListCell *cell = [tableView dequeueReusableCellWithIdentifier:@"ParkingListCell"];
+    Parking *parking = _dataArray[indexPath.row];
+    cell.parking = parking;
+    if (_style == ParkingListVCStyleAllParking) {
+        [cell.rightButton setTitle:@"家" forState:(UIControlStateNormal)];
+        Parking *homeParking = [GroupManage shareGroupManages].homeParking;
+        if ([parking.parkingId isEqualToString:homeParking.parkingId]) {
+            cell.parkingListCellStyle = ParkingListCellStyleSelect;
+        }else
+        {
+            cell.parkingListCellStyle = ParkingListCellStyleUnSelect;
+        }
+        
+    }else
+    {
+        if ([parking.parkingId isEqualToString:[[NSUserDefaults standardUserDefaults] objectForKey:KCARLIFT_PARKINGID]]) {
+            cell.parkingListCellStyle = ParkingListCellStyleSelect;
+        }else
+        {
+            cell.parkingListCellStyle = ParkingListCellStyleUnSelect;
+        }
+        [cell.rightButton setTitle:@"选择" forState:(UIControlStateNormal)];
+
+    }
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    
+    WS(ws)
+    cell.parkingListCellBlock = ^(ParkingListCell *cell){
+        if (ws.style == ParkingListVCStyleAllParking) {
+//            设置家
+            [ws resetHomeParking:cell.parking];
+            
+        }else
+        {
+//            设置爱车生活车场
+            [ws resetCarLiftParking:cell.parking];
+        }
+        
+    };
+    
+    return cell;
+}
+- (void)resetCarLiftParking:(Parking *)parking
+{
+    [GroupManage shareGroupManages].carLiftParking = parking;
+    [self.rt_navigationController popToRootViewControllerAnimated:YES complete:nil];
+
+}
+- (void)resetHomeParking:(Parking *)parking
+{
+    
+//    如果是游客设置家停车场  只缓存在本地
+    if ([GroupManage shareGroupManages].isVisitor) {
+        [GroupManage shareGroupManages].homeParking = parking;
+        [self.rt_navigationController popToRootViewControllerAnimated:YES complete:nil];
+        return;
+    }
+    
+    NSString *summary = [[NSString stringWithFormat:@"%@%@%@%@%@",[UtilTool getCustomId],parking.parkingId,@(1),@"1.3.7",SECRET_KEY] MD5];
+    NSString *url = [NSString stringWithFormat:@"%@/%@/%@/%@/%@/%@",APP_URL(setDefaultScan),[UtilTool getCustomId],parking.parkingId,@(1),@"1.3.7",summary];
+    [NetWorkEngine getRequestUse:(self) WithURL:url WithDic:nil needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        [GroupManage shareGroupManages].homeParking = parking;
+        [self.rt_navigationController popToRootViewControllerAnimated:YES complete:nil];
+        
+    } error:^(NSString *error) {
+        
+    } failure:^(NSString *fail) {
+        
+    }];
+    
+    
+    
+    
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+}
+
+
+
+@end

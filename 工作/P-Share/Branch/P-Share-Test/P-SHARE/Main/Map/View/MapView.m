@@ -1,0 +1,513 @@
+//
+//  MapView.m
+//  P-SHARE
+//
+//  Created by fay on 16/8/30.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "MapView.h"
+#import "YuYueRequest.h"
+#import <MAMapKit/MAMapKit.h>
+#import "ParkingDetailVC.h"
+#import <AMapLocationKit/AMapLocationKit.h>
+#import <AMapFoundationKit/AMapFoundationKit.h>
+#import <AMapSearchKit/AMapSearchKit.h>
+#import "FayPointAnnotation.h"
+#import "FayAnnotationView.h"
+#import "NoServerAlertView.h"
+#import "CenterAnnotationView.h"
+@interface MapView ()<MAMapViewDelegate,AMapSearchDelegate,AMapLocationManagerDelegate>
+{
+    NSMutableArray  *_parkingArray;//保存所有停车场
+    NSMutableArray  *_annotationArray;//
+    NoServerAlertView   *_noServerAlertView;
+    UIImageView     *_redAnnotation;
+}
+@property (nonatomic,strong)CenterAnnotationView     *centerAnnotation;
+
+@property (nonatomic, strong)AMapLocationManager    *locationManager;
+@property (nonatomic,strong)MAMapView               *mapview;
+@property (nonatomic,strong)AMapSearchAPI           *search;
+@property (nonatomic,assign)float                   nowLatitude,  //保存用户的位置坐标
+                                                    nowLongitude;
+@property (nonatomic,strong)GroupManage             *manage;
+
+
+@property (nonatomic,strong)NSMutableArray *annotations;
+
+@end
+@implementation MapView
+
+- (void)setUpSubView
+{
+    
+    _manage = [GroupManage shareGroupManages];
+    _parkingArray = [NSMutableArray array];
+    
+    [self loadMap];
+    
+    [self getHomePark];
+    
+}
+
+- (void)dealloc
+{
+    self.mapview = nil;
+}
+
+- (void)refreshMapData
+{
+    [self getParkDataWith:self.mapview.userLocation.coordinate.latitude With:self.mapview.userLocation.coordinate.longitude];
+    [self getHomePark];
+}
+
+#pragma mark -- 获取家停车场
+- (void)getHomePark
+{
+    if (!_manage.homeParking && !_manage.isVisitor) {
+        NSString *homeSummary = [[NSString stringWithFormat:@"%@%@%@",[UtilTool getCustomId],@"1.3.7",SECRET_KEY] MD5];
+        NSString *URL = [NSString stringWithFormat:@"%@/%@/%@/%@",APP_URL(indexShow),[UtilTool getCustomId],@"1.3.7",homeSummary];
+        MyLog(@"获取家停车场 %@",URL);
+
+        [NetWorkEngine getRequestUse:(self) WithURL:URL WithDic:nil needAlert:NO showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+            MyLog(@"%@",responseObject);
+
+            NSString *tem = [NSString stringWithFormat:@"%@",responseObject[@"list"]];
+            if ([tem isEqualToString:@""]) {
+                
+            }else
+            {
+                NSArray *temArray = responseObject[@"list"];
+                
+                if (temArray.count > 0) {
+                    Parking *homePark = [Parking shareObjectWithDic:responseObject[@"list"][0]];
+                    _manage.homeParking = homePark;
+                }
+                
+            }
+        } error:^(NSString *error) {
+            MyLog(@"%@",error);
+        } failure:^(NSString *fail) {
+            MyLog(@"%@",fail);
+
+        }];
+        
+        
+        
+    }
+}
+#pragma mark -- 加载中间红色大头针
+- (void)loadRedAnnotation
+{
+    //添加固定位置的annotation
+    FayPointAnnotation *a = [[FayPointAnnotation alloc] init];
+    a.title = @"口袋停服务暂未覆盖到当前位置";
+    a.subtitle = @"敬请期待";
+    a.lockedToScreen = YES;
+    a.lockedScreenPoint = CGPointMake(SCREEN_WIDTH/2.0, SCREEN_HEIGHT/2.0);
+    [self.mapview addAnnotation:a];
+}
+#pragma mark -- 初始化地图
+- (void)loadMap
+{
+    [[AMapServices sharedServices] setEnableHTTPS:YES];
+    [AMapServices sharedServices].apiKey = GAODE_APPKEY;
+    
+    if (!_mapview) {
+        _mapview = [[MAMapView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
+        _search = [[AMapSearchAPI alloc] init];
+        _mapview.delegate = self;
+        [self addSubview:_mapview];
+        self.locationManager = [[AMapLocationManager alloc] init];
+        _locationManager.delegate = self;
+        [self.locationManager startUpdatingLocation];//开始定位
+        
+    }
+    _mapview.rotateCameraEnabled = YES;
+    _mapview.skyModelEnable = YES;
+    _mapview.showsCompass = NO;
+    _mapview.showsScale = NO;
+    _mapview.distanceFilter = kCLLocationAccuracyNearestTenMeters;
+    _mapview.desiredAccuracy = kCLLocationAccuracyHundredMeters;
+    _mapview.showsUserLocation = YES;    //YES 为打开定位，NO为关闭定位
+    
+    MACoordinateRegion region;
+    region.span = MACoordinateSpanMake(0.01, 0.01);
+//    默认坐标
+//    region.center =  CLLocationCoordinate2DMake(31.225701,121.481342);
+//    测试坐标
+    region.center =  CLLocationCoordinate2DMake(39.5427,116.2317);
+
+    [_mapview setRegion:region animated:YES];
+    
+    [_mapview setUserTrackingMode: MAUserTrackingModeFollow animated:YES];
+    [_mapview mas_updateConstraints:^(MASConstraintMaker *make) {
+        
+        make.edges.mas_equalTo(UIEdgeInsetsZero);
+        
+    }];
+    _mapview.customizeUserLocationAccuracyCircleRepresentation = YES;
+    
+    
+}
+
+#pragma mark -- MAMapView定位成功
+- (void)amapLocationManager:(AMapLocationManager *)manager didUpdateLocation:(CLLocation *)location{
+    //定位成功
+    
+}
+#pragma mark --MAMapView代理方法
+/*!
+ @brief 定位失败后调用此接口
+ @param mapView 地图View
+ @param error 错误号，参考CLError.h中定义的错误号
+ */
+- (void)mapView:(MAMapView *)mapView didFailToLocateUserWithError:(NSError *)error
+{
+    
+    static int num = 1;
+    
+    
+    switch([error code]) {
+        case kCLErrorDenied:
+            
+            if (num == 1) {
+                
+                
+                num = 0;
+                
+            }
+            break;
+            
+            
+            
+        case kCLErrorLocationUnknown:
+            
+            break;
+            
+        default:
+
+            break;
+    }
+}
+
+#pragma mark --当用户坐标发生改变时，重新获取停车场数组
+- (void)mapView:(MAMapView *)mapView didUpdateUserLocation:(MAUserLocation *)userLocation updatingLocation:(BOOL)updatingLocation
+{
+    
+    float horizontalSpace = _nowLatitude - userLocation.coordinate.latitude;
+    float verticalSpace = _nowLongitude - userLocation.coordinate.longitude;
+    
+    
+    if (horizontalSpace >= 0.01 || horizontalSpace <= -0.01 || verticalSpace >= 0.01 || verticalSpace <= -0.01)
+    {
+        
+        MyLog(@"当用户坐标发生改变时，重新获取停车场数组 坐标：%f %f %d",userLocation.coordinate.latitude,userLocation.coordinate.longitude,updatingLocation);
+        
+        _nowLongitude = userLocation.coordinate.longitude;
+        _nowLatitude = userLocation.coordinate.latitude;
+
+        CoordinateModel *coordinateModel = [CoordinateModel shareCoordinateModelWithLatitude:_nowLatitude longitude:_nowLongitude];
+        _manage.coordinateModel = coordinateModel;
+        
+        [self getParkDataWith:_nowLatitude With:_nowLongitude];
+        
+        MACoordinateRegion region;
+        region.span = MACoordinateSpanMake(0.01, 0.01);
+        region.center =  CLLocationCoordinate2DMake(userLocation.coordinate.latitude,userLocation.coordinate.longitude);
+        [_mapview setRegion:region animated:YES];
+        
+    }
+
+}
+- (void)mapView:(MAMapView *)mapView didSingleTappedAtCoordinate:(CLLocationCoordinate2D)coordinate
+{
+    MyLog(@"地图被点击");
+    
+}
+- (void)mapView:(MAMapView *)mapView regionWillChangeAnimated:(BOOL)animated
+{
+    MyLog(@"地图将要移动");
+    
+}
+#pragma mark -
+#pragma mark - 地图滑动调用此方法
+- (void)mapView:(MAMapView *)mapView regionDidChangeAnimated:(BOOL)animated{
+    
+    [MobClick event:@"td"];
+    // 固定大头针跳动
+    self.centerAnnotation.needBeat = YES;
+    //    屏幕坐标转化为地图经纬度
+    CLLocationCoordinate2D MapCoordinate = [_mapview convertPoint:_mapview.center toCoordinateFromView:_mapview];
+    
+    NSString *summary = [[NSString stringWithFormat:@"%f%f%@",MapCoordinate.latitude,MapCoordinate.longitude,SECRET_KEY] MD5];
+    
+    NSString *url = [NSString stringWithFormat:@"%@/%f/%f/%@",APP_URL(getIsParking),MapCoordinate.latitude,MapCoordinate.longitude,summary];
+    MyLog(@"%lf   %lf",MapCoordinate.latitude,MapCoordinate.longitude);
+    [[NSNotificationCenter defaultCenter] postNotificationName:KMAP_MOVE object:nil];
+    
+    [NetWorkEngine getRequestUse:(self) WithURL:url WithDic:nil needAlert:NO showHud:NO  success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        MyLog(@"%@",responseObject);
+        
+        Parking *parkingModel = [Parking shareObjectWithDic:responseObject[@"parkingList"][0]];
+        parkingModel.distance = [self getDistanceWithParkModel:parkingModel];
+        _manage.parking = parkingModel;
+        
+        if (self.centerAnnotation.isCalloutShow) {
+            [self.centerAnnotation hiddenCalloutView];
+        }
+        
+    } error:^(NSString *error) {
+        
+        MyLog(@"%@",error);
+        _manage.parking = nil;
+        if (!self.centerAnnotation.isCalloutShow) {
+            [self.centerAnnotation showCalloutView];
+        }
+
+        
+    } failure:^(NSString *fail) {
+        _manage.parking = nil;
+        MyLog(@"%@",fail);
+        if (!self.centerAnnotation.isCalloutShow) {
+            [self.centerAnnotation showCalloutView];
+        }
+        
+    }];
+    
+}
+
+#pragma mark - MAMapViewDelegate
+
+- (MAPinAnnotationView *)mapView:(MAMapView *)mapView viewForAnnotation:(id<MAAnnotation>)annotation
+{
+    
+    // 返回nil就会按照系统的默认做法
+    if (![annotation isKindOfClass:[MAPointAnnotation class]]) return nil;
+    
+    FayPointAnnotation *fayAnnotation = (FayPointAnnotation *)annotation;
+    
+    if (fayAnnotation.isLockedToScreen) {
+        static NSString *pointReuseIdentifier = @"pointReuseIdentifier";
+        CenterAnnotationView *annotationView = (CenterAnnotationView *)[mapView dequeueReusableAnnotationViewWithIdentifier:pointReuseIdentifier];
+        if (!annotationView) {
+            annotationView = [[CenterAnnotationView alloc] initWithAnnotation:annotation reuseIdentifier:pointReuseIdentifier];
+            annotationView.canShowCallout = NO;
+            annotationView.draggable = NO;
+
+        }
+        annotationView.zIndex = 1000;
+        self.centerAnnotation = annotationView;
+        annotationView.annotationImage = [UIImage imageNamed:@"redPin"];
+        annotationView.title = fayAnnotation.title;
+        annotationView.subTitle = fayAnnotation.subtitle;
+        return (MAPinAnnotationView *)annotationView;
+        
+    }else{
+        // 1.获得大头针控件
+        FayAnnotationView *annoView = [FayAnnotationView annotationViewWithMapView:mapView];
+        annoView.needAnimation = YES;
+        // 2.传递模型
+        annoView.annotation = annotation;
+        [self setAnnotationView:annoView];
+        return (MAPinAnnotationView *)annoView;
+    }
+}
+
+#pragma mark -- 设置大头针样式
+- (void)setAnnotationView:(FayAnnotationView *)fayView
+{
+    FayPointAnnotation *annotation = fayView.annotation;
+    
+    if (annotation) {
+        Parking *model = _manage.homeParking;
+        
+        if (annotation.model.isCooperate == 2) {
+            
+            fayView.portrait = [UIImage imageNamed:@"blueAnnotationLittle_v2"];
+            
+        }else
+        {
+            fayView.portrait = [UIImage imageNamed:@"greenAnnotation_v2"];
+        }
+        
+        if ([annotation.model.parkingId isEqualToString:model.parkingId]) {
+            
+            fayView.portrait = [UIImage imageNamed:@"homeAnnotation_v2"];
+        }
+        WS(ws)
+        fayView.goToParkDetail = ^(Parking *model)
+        {
+            ParkingDetailVC *parkingDetailVC = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"ParkingDetailVC"];
+            parkingDetailVC.park = model;
+            [ws.viewController.rt_navigationController pushViewController:parkingDetailVC animated:YES];
+        };
+        
+    }
+    
+}
+#pragma mark -- 计算出用户与停车场之间的距离
+- (NSString *)getDistanceWithParkModel:(Parking *)model
+{
+    MAMapPoint Point = MAMapPointForCoordinate(CLLocationCoordinate2DMake(self.nowLatitude , self.nowLongitude));
+    MAMapPoint point2 = MAMapPointForCoordinate(CLLocationCoordinate2DMake([model.parkingLatitude floatValue], [model.parkingLongitude floatValue]));
+    CLLocationDistance distances = MAMetersBetweenMapPoints(Point, point2);
+    NSString *distance = [NSString stringWithFormat:@"%lf",distances];
+    NSString *temDistance = [distance componentsSeparatedByString:@"."].firstObject;
+    MyLog(@"------------------%f",[distance floatValue]);
+    if (temDistance.length >3) {
+        
+        NSString *distance = [self backFrom:temDistance];
+        
+        return [NSString stringWithFormat:@"%@千米",distance];
+        
+    }else
+    {
+        return [NSString stringWithFormat:@"%@米",temDistance];
+    }
+    
+    MyLog(@"------------------%f",[distance floatValue]);
+}
+- (NSString *)backFrom:(NSString *)myMile{
+    NSInteger tag = [myMile integerValue]/1000;
+    NSInteger tag1 = [myMile integerValue]%1000;
+    NSInteger tag2 =  tag1/10;
+    NSString *str = [NSString stringWithFormat:@"%ld.%ld",(long)tag,(long)tag2];
+    return str;
+}
+#pragma mark - 点击大头针
+
+- (void)mapView:(MAMapView *)mapView didSelectAnnotationView:(MAAnnotationView *)view
+{
+    static BOOL isHome;
+     [MobClick event:@"xm"];
+    if ([view isKindOfClass:[FayAnnotationView class]]) {
+        
+        FayAnnotationView *cusView = (FayAnnotationView *)view;
+        FayPointAnnotation *annotation = view.annotation;
+        for (Parking *model in _parkingArray) {
+            if ([model.parkingId isEqualToString:annotation.model.parkingId]) {
+                annotation.model.parkingCanUse = model.parkingCanUse;
+            }
+        }
+        annotation.model.distance = [self getDistanceWithParkModel:annotation.model];
+        _manage.parking = annotation.model;
+        if (annotation.model.isCooperate == 1) {//导航
+            [MobClick event:@"ClickRedAnnotationID"];
+            cusView.isHomePark = NO;
+            cusView.parkModel = annotation.model;
+            cusView.originalModel = annotation.model;
+            isHome = NO;
+
+        }else
+        {
+            
+            Parking *aParkModel = _manage.homeParking;
+            [MobClick event:@"ClickBlueAnnotationID"];
+
+            if (annotation.model.canUse == 2 || [annotation.model.parkingId isEqualToString:aParkModel.parkingId]) {
+                isHome = YES;
+                cusView.isHomePark = YES;
+                
+                MyLog(@"getBubbleInfoWith  发出网络请求");
+                [YuYueRequest getBubbleInfoWith: annotation.model Completion:^(Parking *newParkModel) {
+                    if (isHome) {
+                        cusView.originalModel = annotation.model;
+                        cusView.parkModel = newParkModel;
+                        isHome = NO;
+                    }
+                }];
+               
+            }else{
+                //预约停车        获取气泡内容 资源停车场
+                cusView.isHomePark = NO;
+                cusView.originalModel = annotation.model;
+                cusView.parkModel = annotation.model;
+                isHome = NO;
+            }
+            
+        }
+        
+    }
+}
+
+
+#pragma mark -- 获取停车场数据
+- (void)getParkDataWith:(float)latitude With:(float)Longitude
+{
+    NSString *summary = [[NSString stringWithFormat:@"%f%f%@%@",latitude,Longitude,@"1.3.7",SECRET_KEY] MD5];
+    NSString *url = [NSString stringWithFormat:@"%@/%f/%f/%@/%@",APP_URL(searchParkListByLL),latitude,Longitude,@"1.3.7",summary];
+    
+    MyLog(@"%@",[NSThread currentThread]);
+    
+    
+    [NetWorkEngine getRequestUse:(self) WithURL:url WithDic:nil needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        MyLog(@"%@",[NSThread currentThread]);
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+
+            [_parkingArray removeAllObjects];
+            for (NSDictionary *dic in responseObject[@"list"]) {
+                Parking *model = [Parking shareObjectWithDic:dic];
+                [_parkingArray addObject:model];
+            }
+            [self addAnnotationWithCooordinate];
+            
+        });
+        
+    } error:^(NSString *error) {
+        MyLog(@"%@",error);
+        
+    } failure:^(NSString *fail) {
+        MyLog(@"%@",fail);
+    }];
+    
+}
+
+#pragma mark -- 添加大头针
+- (void)addAnnotationWithCooordinate
+{
+    if(!_annotationArray){
+        _annotationArray = [NSMutableArray array];
+    }
+    [_annotationArray removeAllObjects];
+    for (Parking *model in _parkingArray) {
+        FayPointAnnotation *annotation = [[FayPointAnnotation alloc] init];
+        annotation.coordinate = CLLocationCoordinate2DMake([model.parkingLatitude floatValue], [model.parkingLongitude floatValue]);
+        annotation.model = model;
+        annotation.title = model.parkingId;
+        if (![_annotationArray containsObject:annotation]) {
+            [_annotationArray addObject:annotation];
+        }
+    }
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.mapview removeAnnotations:self.mapview.annotations];
+        [self.mapview addAnnotations:_annotationArray];
+        [self loadRedAnnotation];
+    });
+    
+
+}
+- (void)location
+{
+    MACoordinateRegion region;
+    region.span = MACoordinateSpanMake(0.01, 0.01);
+    region.center = _mapview.userLocation.location.coordinate;
+    [_mapview setRegion:region animated:YES];
+}
+
+- (void)locationWithLatitude:(NSString *)latitude Longitude:(NSString *)longitude
+{
+    MACoordinateRegion region;
+    region.span = MACoordinateSpanMake(0.01, 0.01);
+    region.center.latitude = [latitude floatValue];
+    region.center.longitude = [longitude floatValue];
+    [_mapview setRegion:region animated:YES];
+}
+
+
+
+@end

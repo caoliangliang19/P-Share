@@ -1,0 +1,180 @@
+//
+//  PurseViewController.m
+//  P-SHARE
+//
+//  Created by 亮亮 on 16/9/8.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "PurseViewController.h"
+#import "PurseTradeVC.h"
+#import "PursePayForVC.h"
+#import "POPNumberAnimation.h"
+
+@interface PurseViewController ()<POPNumberAnimationDelegate>
+{
+    UIImageView *_purseLogo;
+    UILabel *_myBalanceL;
+    UILabel *_myMoneyL;
+    UIButton *_addMoneyBtn;
+    UILabel *_myBiaoL;
+    UILabel *_otherL;
+    CGFloat _currentMoney;
+    
+}
+@property (nonatomic, strong) POPNumberAnimation *numberAnimation;
+
+@end
+
+@implementation PurseViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [self refreshMoney];
+    [self createNavGationView];
+   
+    
+}
+- (void)refreshMoney{
+    NSString *summary = [[NSString stringWithFormat:@"%@%@",[UtilTool getCustomId],SECRET_KEY] MD5];
+    NSString *url = [NSString stringWithFormat:@"%@/%@/%@",APP_URL(getMoney),[UtilTool getCustomId],summary];
+    [NetWorkEngine getRequestWithURL:url WithDic:nil needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        _currentMoney = [responseObject[@"money"] floatValue];
+         [self createUI];
+    } error:^(NSString *error) {
+        
+    } failure:^(NSString *fail) {
+        
+    }];
+}
+- (void)createNavGationView{
+    self.title = @"我的钱包";
+    UIButton *button = [[UIButton alloc]initWithFrame:CGRectMake(0, 0, 70, 40)];
+    button.backgroundColor = [UIColor clearColor];
+    [button setTitle:@"交易记录" forState:(UIControlStateNormal)];
+    button.titleLabel.font = [UIFont systemFontOfSize:15];
+    [button setTitleColor:[UIColor whiteColor] forState:(UIControlStateNormal)];
+    [button addTarget:self action:@selector(onRightClick) forControlEvents:UIControlEventTouchUpInside];
+    self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc]initWithCustomView:button];
+      [[NSNotificationCenter defaultCenter] postNotificationName:@"refreshWalletMoney" object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshMoneyData) name:@"refreshWalletMoney" object:nil];
+}
+- (void)refreshMoneyData{
+    [self refreshMoney];
+}
+#pragma mark -
+#pragma mark - 进入交易记录页面
+- (void)onRightClick{
+    PurseTradeVC *trade = [[PurseTradeVC alloc] init];
+    trade.type = DisfferentVCTypeJiLu;
+    [self.rt_navigationController pushViewController:trade animated:YES];
+}
+#pragma mark -
+#pragma mark - 创建页面控件
+- (void)createUI{
+    _purseLogo = [[UIImageView alloc]init];
+    _purseLogo.image = [UIImage imageNamed:@"item_balance"];
+    [self.view addSubview:_purseLogo];
+    
+    _myBalanceL = [UtilTool createLabelFrame:CGRectZero title:@"我的余额" textColor:[UIColor colorWithHexString:@"000000"] font:[UIFont systemFontOfSize:15] textAlignment:NSTextAlignmentCenter numberOfLine:1];
+    [self.view addSubview:_myBalanceL];
+    
+    _myMoneyL = [UtilTool createLabelFrame:CGRectZero title:[NSString stringWithFormat:@"0.0"] textColor:[UIColor colorWithHexString:@"000000"] font:[UIFont systemFontOfSize:40] textAlignment:NSTextAlignmentCenter numberOfLine:0];
+    [self.view addSubview:_myMoneyL];
+
+   
+    [self configNumberAnimation];
+    [self.numberAnimation startAnimation];
+   
+    
+    _addMoneyBtn = [UtilTool createBtnFrame:CGRectZero title:@"立即充值" bgImageName:nil target:self action:@selector(onAddMoney)];
+    _addMoneyBtn.backgroundColor = [UIColor colorWithHexString:@"39d5b8"];
+    [_addMoneyBtn setTitleColor:[UIColor whiteColor] forState:(UIControlStateNormal)];
+    _addMoneyBtn.titleLabel.font = [UIFont systemFontOfSize:15];
+    _addMoneyBtn.layer.cornerRadius = 5;
+    _addMoneyBtn.clipsToBounds = YES;
+    [self.view addSubview:_addMoneyBtn];
+    
+    _myBiaoL = [UtilTool createLabelFrame:CGRectZero title:@"钱包支付更便捷" textColor:[UIColor colorWithHexString:@"39d5b8"] font:[UIFont systemFontOfSize:13] textAlignment:NSTextAlignmentCenter numberOfLine:0];
+    [self.view addSubview:_myBiaoL];
+    
+    _otherL = [UtilTool createLabelFrame:CGRectZero title:@"如有疑问请联系客服:400 006 2637" textColor:[UIColor colorWithHexString:@"959595"] font:[UIFont systemFontOfSize:13] textAlignment:NSTextAlignmentCenter numberOfLine:0];
+    [self.view addSubview:_otherL];
+    
+    [_purseLogo mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(144);
+        make.centerX.mas_equalTo(self.view);
+        make.height.width.mas_equalTo(90);
+    }];
+    [_myBalanceL mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(_purseLogo.mas_bottom).offset(20);
+        make.centerX.mas_equalTo(self.view);
+    }];
+    [_myMoneyL mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(_myBalanceL.mas_bottom).offset(5);
+        make.centerX.mas_equalTo(self.view);
+    }];
+    [_addMoneyBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(_myMoneyL.mas_bottom).offset(30);
+        make.left.mas_equalTo(self.view).offset(17.5);
+        make.right.mas_equalTo(self.view).offset(-17.5);
+        make.height.mas_equalTo(45);
+    }];
+    [_myBiaoL mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(_addMoneyBtn.mas_bottom).offset(20);
+        make.centerX.mas_equalTo(self.view);
+    }];
+    [_otherL mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.bottom.mas_equalTo(-20);
+        make.left.right.mas_equalTo(0);
+    }];
+ 
+    
+}
+
+- (void)configNumberAnimation {
+    self.numberAnimation = [[POPNumberAnimation alloc] init];
+    self.numberAnimation.delegate        = self;
+    self.numberAnimation.fromValue      = 0;
+    self.numberAnimation.toValue        = _currentMoney;
+    
+    self.numberAnimation.duration       = 1.5f;
+    self.numberAnimation.timingFunction = [CAMediaTimingFunction functionWithControlPoints:0.69 :0.11 :0.32 :0.88];
+    [self.numberAnimation saveValues];
+    
+}
+
+#pragma mark --- POPNumberAnimationDelegate
+- (void)POPNumberAnimation:(POPNumberAnimation *)numberAnimation currentValue:(CGFloat)currentValue
+{
+
+    MyLog(@"currentValue --->%lf",currentValue);
+    // Init string.
+    NSString *numberString = [NSString stringWithFormat:@"%.1f", currentValue];
+    _myMoneyL.text = numberString;
+   
+}
+#pragma mark -
+#pragma mark - 进入支付页面
+- (void)onAddMoney{
+    PursePayForVC *payFor = [[PursePayForVC alloc]init];
+    [self.rt_navigationController pushViewController:payFor animated:YES complete:nil];
+}
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+- (void)dealloc{
+    [[NSNotificationCenter defaultCenter]removeObserver:self];
+}
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

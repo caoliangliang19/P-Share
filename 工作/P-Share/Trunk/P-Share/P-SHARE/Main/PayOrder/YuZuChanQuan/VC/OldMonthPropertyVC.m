@@ -1,0 +1,362 @@
+//
+//  OldMonthPropertyVC.m
+//  P-SHARE
+//
+//  Created by fay on 2016/12/7.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "OldMonthPropertyVC.h"
+#import "NewMonthlyRentAuthCodeCell.h"
+#import "NewMonthlyRentPayCell.h"
+#import "SuccessCell.h"
+#import "InvoiceView.h"
+
+@interface OldMonthPropertyVC ()<UITableViewDelegate,UITableViewDataSource,NewMonthlyRentPayCellDelegate>
+{
+    NSString *_validateResult;
+    UITextField *_messageCode;
+    NSString *_orderKind;
+    // 是否需要验证手机号
+    BOOL _isNeedValidate;
+
+    // 是否同意协议
+    BOOL _agreeProtocol;
+}
+@property (nonatomic,strong)UIButton *getTextCodeBtn;
+
+@property (nonatomic,copy)NSString *invoiceId;
+
+@property (nonatomic,strong)UITableView *tableView;
+// 验证结果
+@property (nonatomic,assign)BOOL validateHandle;
+
+@property (nonatomic,strong)InvoiceView *invoice;
+
+@property (nonatomic,strong)UIView *bgView;
+
+@end
+
+@implementation OldMonthPropertyVC
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [self addHeadView];
+    self.automaticallyAdjustsScrollViewInsets = YES;
+    _agreeProtocol = YES;
+    [self.view addSubview:self.tableView];
+    [self.tableView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(UIEdgeInsetsZero);
+    }];
+}
+- (void)setOrderModel:(OrderModel *)orderModel{
+    _orderModel = orderModel;
+    if ([_orderModel.allow intValue] == 0) {
+        
+        _isNeedValidate = YES;
+    }else{
+        _isNeedValidate = NO;
+    }
+}
+- (UITableView *)tableView{
+    if (!_tableView) {
+        _tableView = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStyleGrouped];
+        _tableView.delegate = self;
+        _tableView.dataSource = self;
+        _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+        _tableView.tableFooterView = [UIView new];
+        [_tableView registerNib:[UINib nibWithNibName:@"NewMonthlyRentAuthCodeCell" bundle:nil] forCellReuseIdentifier:@"NewMonthlyRentAuthCodeCell"];
+        [_tableView registerNib:[UINib nibWithNibName:@"NewMonthlyRentPayCell" bundle:nil] forCellReuseIdentifier:@"NewMonthlyRentPayCell"];
+        [_tableView registerNib:[UINib nibWithNibName:@"SuccessCell" bundle:nil] forCellReuseIdentifier:@"SuccessCell"];
+
+
+    }
+    return _tableView;
+}
+- (void)addHeadView{
+    if (self.monthPropertyVCStyle == OldMonthPropertyVCStyleYueZu) {
+        //获取的orderType为nil 在这里手动设置
+        _orderModel.orderType = @"13";
+        self.title = @"月租支付";
+        _orderKind = @"《口袋停线上缴费协议》";
+    }else{
+        _orderModel.orderType = @"14";
+        self.title = @"产权支付";
+        _orderKind = @"《口袋停线上缴费协议》";
+
+    }
+    
+}
+
+
+#pragma mark -- tableView delegate
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    MyLog(@"%@",_orderModel.allow);
+    
+    if (_isNeedValidate) {
+        return 20;
+    }
+    return 0.1;
+    
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (_isNeedValidate){
+        if (indexPath.row == 0) {
+            if (!_validateHandle){
+                return 127;
+            }else
+            {
+                return 80;
+            }
+        }
+        return 297;
+        
+    }
+    return 297;
+    
+    
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (_isNeedValidate) {
+        //        需要验证手机号
+        return 2;
+    }else{
+        return 1;
+    }
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (_isNeedValidate)
+    {
+        if(indexPath.row == 0){
+            if (!_validateHandle) {
+                // 没有验证成功
+                NewMonthlyRentAuthCodeCell *cell = [tableView dequeueReusableCellWithIdentifier:@"NewMonthlyRentAuthCodeCell"];
+                cell.orderModel = self.orderModel;
+                cell.selectionStyle = UITableViewCellSelectionStyleNone;
+                
+                _getTextCodeBtn = cell.getAuthCodeBtn;
+                
+                _messageCode = cell.authCode;
+                WS(ws)
+                cell.verificationHandle = ^(BOOL result){
+                    ws.validateHandle = result;
+                    [ws.tableView reloadData];
+                };
+                
+                return cell;
+            }else
+            {
+                // 手机号验证成功
+                // 改变model.allow
+                _orderModel.allow = @"1";
+                SuccessCell *cell = [tableView dequeueReusableCellWithIdentifier:@"SuccessCell"];
+                cell.selectionStyle = UITableViewCellSelectionStyleNone;
+                return cell;
+            }
+            
+        }
+        
+        return  [self createCell:tableView cellForRowAtIndexPath:indexPath];
+        
+    }else
+    {
+        return [self createCell:tableView cellForRowAtIndexPath:indexPath];
+    }
+    
+}
+
+- (UITableViewCell *)createCell:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    NewMonthlyRentPayCell *cell = [tableView dequeueReusableCellWithIdentifier:@"NewMonthlyRentPayCell"];
+    
+    cell.selectBtn.tag = indexPath.row;
+    cell.InvoiceSwitch.tag = indexPath.row;
+    cell.delegate  = self;
+
+    
+    cell.agreeL.text = [NSString stringWithFormat:@"我已同意%@",_orderKind];
+
+    cell.orderModel = self.orderModel;
+
+    
+    if (_isNeedValidate) {
+        // 是否需要验证手机号
+        cell.danJiaL.text = @"-";
+        cell.priceL.text = @"-";
+        cell.selectBtn.userInteractionEnabled = NO;
+        cell.payBtn.userInteractionEnabled = NO;
+        if (_validateHandle) {
+            // 验证手机号成功
+            cell.selectBtn.userInteractionEnabled = YES;
+            cell.payBtn.userInteractionEnabled = YES;
+            
+            cell.orderModel = self.orderModel;
+            
+            if (_agreeProtocol) {
+                cell.selectImgV.image = [UIImage imageNamed:@"agree"];
+                cell.payBtn.backgroundColor = [UIColor colorWithHexString:@"39D5B8"];
+            }else{
+                cell.selectImgV.image = [UIImage imageNamed:@"disagree"];
+                cell.payBtn.backgroundColor = [UIColor grayColor];
+            }
+           
+        }
+        
+    }else
+    {
+        cell.selectBtn.userInteractionEnabled = YES;
+        cell.payBtn.userInteractionEnabled = YES;
+      
+        if (_agreeProtocol) {
+            cell.selectImgV.image = [UIImage imageNamed:@"agree"];
+            cell.payBtn.backgroundColor = [UIColor colorWithHexString:@"39D5B8"];
+        }else{
+            cell.selectImgV.image = [UIImage imageNamed:@"disagree"];
+            cell.payBtn.backgroundColor = [UIColor grayColor];
+        }
+        
+    }
+    
+    cell.gotoMonthiyPayVC = ^(NewMonthlyRentPayCell *rentCell){
+        NSInteger tem = [rentCell compareOneDay:[rentCell StringChangeDate:rentCell.jiaoFeeEndTimeL.text] withAnotherDay:[rentCell StringChangeDate:rentCell.maxDate]];
+        //判断当前月租到期时间是否大于或者等于最大缴费时间
+        if (tem == 1) {
+            [[GroupManage shareGroupManages] groupAlertShowWithTitle:@"您已经超出续费期限"];
+            
+            return ;
+        }
+
+        PayCenterViewController *payCenter = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"PayCenterViewController"];
+        payCenter.order = [[OrderModel alloc] init];
+        payCenter.order.price = _orderModel.price;
+        payCenter.order.orderType = _orderModel.orderType;
+        //    payCenter.order.orderId = _orderModel.orderId;
+        payCenter.order.parkingId = _orderModel.parkingId;
+        payCenter.order.carNumber = _orderModel.carNumber;
+        payCenter.order.beginDate = [self getStartTime];
+        payCenter.order.monthNum  = rentCell.monthNumL.text;
+        payCenter.order.invoiceId = _invoiceId;
+        payCenter.orderKind = self.monthPropertyVCStyle == OldMonthPropertyVCStyleYueZu ? PayCenterViewControllerOrferTypeYueZu : PayCenterViewControllerOrferTypeChanQuan;
+        
+        [self.rt_navigationController pushViewController:payCenter animated:YES];
+    };
+    
+  
+    return cell;
+    
+}
+
+- (NSString *)getStartTime
+{
+    NSString *firstCharecter = [[_orderModel.endDate componentsSeparatedByString:@" "] firstObject];
+    NSArray *arr = [firstCharecter componentsSeparatedByString:@"-"];
+    
+    if ([arr[1] intValue] < 9) {
+        return [NSString stringWithFormat:@"%@-0%d-01",arr[0],[arr[1] intValue]+1];
+        
+    }else if ([arr[1] intValue] >= 9 &&[arr[1] intValue] <= 11){
+        return [NSString stringWithFormat:@"%@-%d-01",arr[0],[arr[1] intValue]+1];
+        
+    } else
+    {
+        return [NSString stringWithFormat:@"%d-01-01",[arr[0] intValue]+1];
+        
+    }
+    
+}
+
+
+#pragma mark -- 发票
+- (void)getSwitchIsOn:(UISwitch *)swith{
+    
+    NSIndexPath *indexPath = [NSIndexPath indexPathForRow:swith.tag inSection:0];
+    NewMonthlyRentPayCell *cell = (NewMonthlyRentPayCell *)[self.tableView cellForRowAtIndexPath:indexPath];
+    
+    if (cell.InvoiceSwitch.isOn == YES) {
+        
+      
+        NSString *summey = [[NSString stringWithFormat:@"%@%@%@",[UtilTool getCustomId],_orderModel.parkingId,SECRET_KEY] MD5];
+        NSString *url = [NSString stringWithFormat:@"%@/%@/%@/%@",APP_URL(getLatestInvoiceInfo),[UtilTool getCustomId],_orderModel.parkingId,summey];
+        [NetWorkEngine getRequestUse:(self) WithURL:url WithDic:nil needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+            
+            [self creatAlertView:responseObject mySwitch:swith];
+            
+        } error:^(NSString *error) {
+            
+        } failure:^(NSString *fail) {
+            
+        }];
+
+    }
+}
+#pragma mark -
+#pragma mark - 弹出发票
+- (void)creatAlertView:(NSDictionary *)dict mySwitch:(UISwitch *)swith{
+    _invoice = [InvoiceView shareInstance];
+    _invoice.center = CGPointMake(SCREEN_WIDTH/2, SCREEN_HEIGHT/2-80);
+    _invoice.bounds = CGRectMake(0, 0, 281, 360);
+    _invoice.invHeadField.text = dict[@"invoice"][@"invoiceName"];
+    _invoice.invAddressField.text = dict[@"invoice"][@"sendAddress"];
+    _invoice.sendType =  dict[@"invoice"][@"sendType"];
+    _invoice.textLable.text = dict[@"invoice"][@"invoiceDescribe"];
+    [_invoice animatedIn];
+    _bgView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
+    _bgView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.5];
+    __weak typeof(self) weakSelf = self;
+    _invoice.cancleBlock = ^(){
+        swith.on = NO;
+        weakSelf.bgView.hidden = YES;
+        [weakSelf.view endEditing:YES];
+        
+    };
+    _invoice.tureBlock = ^(NSString *invoiceName,NSString *invoiceAddress,NSString *sendType){
+        
+        MyLog(@"%@",sendType);
+        if (sendType.length<1) {
+            sendType = @"0";
+        }
+        
+        
+        if ([sendType isEqualToString:@"1"] && self.invoice.invAddressField.text.length < 1) {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"寄送上门地址不能为空" message:nil delegate:weakSelf cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+            [alert show];
+            alert = nil;
+            return ;
+        }
+        
+        if (self.invoice.invHeadField.text.length < 1) {
+            UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"发票抬头不能为空" message:nil delegate:weakSelf cancelButtonTitle:@"确定" otherButtonTitles:nil, nil];
+            [alert show];
+            alert = nil;
+            return ;
+        }
+        
+        [weakSelf.invoice animatedOut];
+        weakSelf.bgView.hidden = YES;
+        [weakSelf.view endEditing:YES];
+        
+        
+        NSDictionary *dict = [[NSDictionary alloc]initWithObjectsAndKeys:[UtilTool getCustomId],@"customerId",invoiceName,@"invoiceName",sendType,@"sendType",invoiceAddress,@"sendAddress",weakSelf.orderModel.carNumber,@"carNumber",[UtilTool getTimeStamp],@"timestamp", nil];
+        [NetWorkEngine postRequestUse:(weakSelf) WithURL:APP_URL(postInvoiceInfo) WithDic:dict needEncryption:YES needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+            
+            weakSelf.invoiceId = dict[@"invoiceId"];
+            swith.on = YES;
+            
+        } error:^(NSString *error) {
+            
+        } failure:^(NSString *fail) {
+            
+        }];
+        
+    };
+    [self.view addSubview:_bgView];
+    [self.view addSubview:_invoice];
+    
+}
+
+@end

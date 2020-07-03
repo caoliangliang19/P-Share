@@ -1,0 +1,248 @@
+//
+//  CLLTextView.m
+//  ETCP输入框
+//
+//  Created by 亮亮 on 16/8/30.
+//  Copyright © 2016年 亮亮. All rights reserved.
+//
+
+#import "CLLTextView.h"
+#import "KeyView.h"
+
+@interface CLLTextView ()<KeyViewDelegate>
+{
+    NSInteger _selectIndex;
+    NSMutableArray *_labelArray;
+    BOOL _select;
+   
+}
+@property (nonatomic , strong) KeyView *keyView;
+@end
+
+@implementation CLLTextView
+- (instancetype)initWithFrame:(CGRect)frame{
+    if (self = [super initWithFrame:frame]) {
+        self.backgroundColor = [UIColor whiteColor];
+        _select = NO;
+       
+    }
+    return self;
+}
+
+- (void)onShow{
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(onHidden)];
+    [self.viewController.view addGestureRecognizer:tap];
+    _labelArray = [NSMutableArray array];
+    for (int i = 0; i < 7; i++) {
+        UILabel *pwdLabel = [[UILabel alloc] init ];
+        if(i == 0||i == 1){
+            pwdLabel.frame = CGRectMake(20+i*30, 10, 30, 30);
+        }else{
+            pwdLabel.frame = CGRectMake(40+i*30, 10, 30, 30);
+        }
+        pwdLabel.layer.borderColor = [UIColor colorWithHexString:@"ebebeb"].CGColor;
+        pwdLabel.userInteractionEnabled = YES;
+        pwdLabel.textAlignment = NSTextAlignmentCenter;//居中
+        pwdLabel.tag = 100+i;
+        pwdLabel.layer.borderWidth = 1;
+        [_labelArray addObject:pwdLabel];
+        [self addSubview:pwdLabel];
+        UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(onClack:)];
+        [pwdLabel addGestureRecognizer:tap];
+    }
+    UIView *blueView = [[UIView alloc]initWithFrame:CGRectMake(80+5, 20, 10, 10)];
+    blueView.backgroundColor = [UIColor colorWithHexString:@"39d5b8"];
+    blueView.layer.cornerRadius = 5;
+    blueView.clipsToBounds = YES;
+    [self addSubview:blueView];
+    _selectIndex = 100;
+    UILabel *lable = [self viewWithTag:_selectIndex];
+    lable.layer.borderColor = [UIColor colorWithHexString:@"39d5b8"].CGColor;
+    [self.viewController.view addSubview:self.keyView];
+}
+- (void)onClack:(UIGestureRecognizer *)tap{
+   
+    UILabel *tapLable = (UILabel *)tap.view;
+    for (NSInteger i = 0; i < 7; i++) {
+        UILabel *lable = [self viewWithTag:100+i];
+        if (lable == tapLable) {
+            lable.layer.borderColor = [UIColor colorWithHexString:@"39d5b8"].CGColor;
+            _selectIndex = lable.tag;
+        }else{
+            lable.layer.borderColor = [UIColor colorWithHexString:@"ebebeb"].CGColor;
+        }
+    }
+    [self.viewController.view addSubview:self.keyView];
+    if (tapLable.tag == 100) {
+        [_keyView.scrollView setContentOffset:CGPointMake(0, 0) animated:YES];
+    }else{
+        [_keyView.scrollView setContentOffset:CGPointMake([UIScreen mainScreen].bounds.size.width, 0) animated:YES];
+    }
+    
+}
+
+
+- (void)onHidden{
+    
+    _keyView.hidden = YES;
+    UILabel *lable = [self viewWithTag:_selectIndex];
+    lable.layer.borderColor = [UIColor colorWithHexString:@"ebebeb"].CGColor;
+    
+    NSMutableString *mutabelStr = [NSMutableString string];
+    for (UILabel *temL  in _labelArray) {
+        if (temL.text.length > 0) {
+            [mutabelStr appendString:temL.text];
+        }
+    }
+    
+    if (self.CLLTextViewBlock) {
+        self.CLLTextViewBlock(mutabelStr);
+    }
+    
+    
+}
+- (KeyView *)keyView{
+    if (_keyView == nil) {
+        _keyView = [[KeyView alloc]initWithFrame:CGRectMake(0, [UIScreen mainScreen].bounds.size.height-250-64, [UIScreen mainScreen].bounds.size.width, 250)];
+        _keyView.delegate = self;
+        _keyView.backgroundColor = [UIColor colorWithWhite:0.8 alpha:1];
+    }else{
+        _keyView.hidden = NO;
+    }
+    return _keyView;
+}
+- (void)deleteKey{
+    
+    if (_selectIndex == 99) {
+        _selectIndex = 100;
+    }
+    
+    
+    UILabel *lable = [self viewWithTag:_selectIndex];
+    if (lable.text.length == 0) {
+        _selectIndex--;
+        _select = NO;
+        if (_selectIndex == 99) {
+            _selectIndex = 100;
+        }
+        for (int i = 0; i < 7; i++) {
+            UILabel *allLable = [self viewWithTag:100+i];
+            if (allLable.tag == _selectIndex) {
+                
+                allLable.layer.borderColor = [UIColor colorWithHexString:@"39d5b8"].CGColor;
+                allLable.layer.borderWidth = 1;
+                allLable.text = @"";
+                if (allLable.tag == 100) {
+                    [_keyView.scrollView setContentOffset:CGPointMake(0, 0) animated:YES];
+                }else{
+                    [_keyView.scrollView setContentOffset:CGPointMake([UIScreen mainScreen].bounds.size.width, 0) animated:YES];
+                }
+            }else{
+                allLable.layer.borderColor = [UIColor colorWithHexString:@"ebebeb"].CGColor;
+                allLable.layer.borderWidth = 1;
+            }
+            
+        }
+    }else{
+        
+        for (int i = 0; i < 7; i++) {
+            UILabel *allLable = [self viewWithTag:100+i];
+            if (allLable.tag == _selectIndex) {
+                
+                allLable.layer.borderColor =[UIColor colorWithHexString:@"39d5b8"].CGColor;
+                allLable.layer.borderWidth = 1;
+                allLable.text = @"";
+                if (allLable.tag == 100) {
+                    [_keyView.scrollView setContentOffset:CGPointMake(0, 0) animated:YES];
+                }else{
+                    [_keyView.scrollView setContentOffset:CGPointMake([UIScreen mainScreen].bounds.size.width, 0) animated:YES];
+                }
+            }else{
+                allLable.layer.borderColor = [UIColor colorWithHexString:@"ebebeb"].CGColor;
+                allLable.layer.borderWidth = 1;
+            }
+            
+        }
+        _select = YES;
+        _selectIndex--;
+    }
+    
+    if (_selectIndex == 100) {
+        _selectIndex = 100;
+    }
+   
+}
+- (void)addKeyText:(UIButton *)button{
+    if (_select == YES) {
+        _selectIndex = _selectIndex+1;
+    }
+    _select = NO;
+    UILabel *allLable1 = [self viewWithTag:_selectIndex];
+    allLable1.text = button.currentTitle;
+    if (allLable1.text.length == 0) {
+        
+        for (int i = 0; i < 7; i++) {
+            UILabel *allLable = [self viewWithTag:100+i];
+            if (allLable.tag == _selectIndex) {
+                allLable.layer.borderColor = [UIColor colorWithHexString:@"39d5b8"].CGColor;
+                allLable.layer.borderWidth = 1;
+                if (allLable.tag == 100) {
+                    [_keyView.scrollView setContentOffset:CGPointMake(0, 0) animated:YES];
+                }else{
+                    [_keyView.scrollView setContentOffset:CGPointMake([UIScreen mainScreen].bounds.size.width, 0) animated:YES];
+                }
+                
+            }else{
+                allLable.layer.borderColor = [UIColor colorWithHexString:@"ebebeb"].CGColor;
+                allLable.layer.borderWidth = 1;
+            }
+            
+            
+        }
+        _selectIndex ++;
+    }else{
+        for (int i = 0; i < 7; i++) {
+            UILabel *allLable = [self viewWithTag:100+i];
+            if (allLable.tag == _selectIndex+1) {
+                
+                allLable.layer.borderColor = [UIColor colorWithHexString:@"39d5b8"].CGColor;
+                allLable.layer.borderWidth = 1;
+                if (allLable.tag == 100) {
+                    [_keyView.scrollView setContentOffset:CGPointMake(0, 0) animated:YES];
+                }else{
+                    [_keyView.scrollView setContentOffset:CGPointMake([UIScreen mainScreen].bounds.size.width, 0) animated:YES];
+                }
+                
+            }else{
+                allLable.layer.borderColor = [UIColor colorWithHexString:@"ebebeb"].CGColor;
+                allLable.layer.borderWidth = 1;
+            }
+            
+            
+        }
+        _selectIndex ++;
+    }
+    
+    
+    if (_selectIndex == 99) {
+        _selectIndex = 100;
+    }
+    if (_selectIndex == 107) {
+
+        [self onHidden];
+    }
+    
+}
+
+- (void)setCarNum:(NSString *)carNum
+{
+    _carNum = carNum;
+    for (int i=0; i<carNum.length; i++) {
+        NSString *subStr = [carNum substringWithRange:NSMakeRange(i, 1)];
+        UILabel *label = [self viewWithTag:100+i];
+        label.text = subStr;
+    }
+
+    
+}
+@end

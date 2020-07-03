@@ -1,0 +1,131 @@
+//
+//  TimeLineViewController.m
+//  P-Share
+//
+//  Created by fay on 16/6/16.
+//  Copyright © 2016年 曹亮亮. All rights reserved.
+//
+
+#import "TimeLineViewController.h"
+#import "UITableView+FDTemplateLayoutCell.h"
+#import "TimelineCell.h"
+#import "TimeLineView.h"
+#define  Identifier     @"TimelineCell"
+@interface TimeLineViewController ()
+{
+    NSArray *_temDataArray;
+    
+    //订单类型
+    int _payType;
+    
+}
+@end
+
+@implementation TimeLineViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.title = @"Time Line";
+    _payType = 0;
+    self.tableView.backgroundColor = [MyUtil colorWithHexString:@"eeeeee"];
+
+    [self.tableView registerClass:[TimelineCell class] forCellReuseIdentifier:Identifier];
+    
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+//    ,@6,@7,@8,@9,@10,@11
+    _temDataArray = @[@0,@1,@2,@3,@4,@5,@6,@7,@8,@9,@10,@11];
+
+//    _temDataArray = @[@0,@1,@2,@3,@4,@5];
+}
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    self.navigationController.navigationBarHidden = NO;
+    
+}
+- (void)viewWillDisappear:(BOOL)animated
+{
+    self.navigationController.navigationBarHidden = YES;
+
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+}
+
+#pragma mark - Table view data source
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return _temDataArray.count;
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+   
+    TimelineCell *cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+    [cell layoutIfNeeded];
+    [MyUtil drawDashLine:cell.lineView lineLength:3 lineSpacing:2 lineColor:[MyUtil colorWithHexString:@"6d7e8c"]];
+
+    [self configureCell:cell atIndexPath:indexPath];
+    
+    return cell;
+}
+- (void)configureCell:(UITableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath
+{
+    TimelineCell *newCell = (TimelineCell *)cell;
+//    设置订单类型
+    newCell.payTyle = _payType;
+//    设置订单状态
+    newCell.payStatus = [_temDataArray[indexPath.row] intValue];
+    if (indexPath.row == 0) {
+        newCell.cellPosition = TimelineCellPositionTop;
+    }else if (indexPath.row == _temDataArray.count-1){
+        newCell.cellPosition = TimelineCellPositionBottom;
+    }else
+    {
+        newCell.cellPosition = TimelineCellPositionMiddle;
+    }
+    newCell.fd_enforceFrameLayout = YES;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+//    CGFloat height = [tableView fd_heightForCellWithIdentifier:Identifier cacheByIndexPath:indexPath configuration:^(UITableViewCell *cell) {
+//        [self configureCell:cell atIndexPath:indexPath];
+//    }];
+//    MyLog(@"%f",height);
+//
+//    if (height>0) {
+//        MyLog(@"%ld行高＊＊＊＊＊＊＊ %f",indexPath.row,height);
+//
+//    }
+//    
+//    return height;
+    
+
+    if (_payType == 0) {//代泊
+        if (indexPath.row == 1 || indexPath.row == 3) {
+            return 220;
+        }else
+        {
+            return 120;
+        }
+    }else
+    {//预约
+        if (indexPath.row == 0 || indexPath.row == 2 || indexPath.row == 4) {
+            return 100;
+        }else
+        {
+            return 120;
+        }
+        
+    }
+    
+    
+    
+}
+
+
+
+@end

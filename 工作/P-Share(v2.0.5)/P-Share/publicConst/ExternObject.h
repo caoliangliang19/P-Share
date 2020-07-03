@@ -1,0 +1,26 @@
+//
+//  ExternObject.h
+//  P-Share
+//
+//  Created by fay on 16/7/29.
+//  Copyright © 2016年 曹亮亮. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+/**
+ *  保存车生活车场id
+ */
+UIKIT_EXTERN NSString *const KCarLiftModelID;
+/**
+ *  保存车生活车场name
+ */
+UIKIT_EXTERN NSString *const KCarLiftModelName;
+
+UIKIT_EXTERN NSString *const KUserLogin;
+UIKIT_EXTERN NSString *const KUserExit;
+
+
+@interface ExternObject : NSObject
+
+@end

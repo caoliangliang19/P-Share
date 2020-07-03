@@ -1,0 +1,318 @@
+//
+//  DiscountController.m
+//  P-SHARE
+//
+//  Created by 亮亮 on 16/9/8.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "DiscountController.h"
+#import "NewDiscountCell.h"
+#import "CouponModel.h"
+#import "OldCouponController.h"
+
+@interface DiscountController ()<UITableViewDelegate,UITableViewDataSource>
+{
+    UITextField *_disTextField;
+    UITableView *_disTableView;
+}
+@property (nonatomic,strong)NSMutableArray *canUseArray;
+@property (nonatomic,assign)BOOL isLoad;
+@property (nonatomic,assign)BOOL isRefresh;
+@property (nonatomic,assign)NSInteger indexPage;
+@end
+
+@implementation DiscountController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [self createNavigation];
+    [self createTextFieldView];
+    [self createTableView];
+    [self createRefresh];
+}
+- (void)createNavigation{
+    self.title = @"我的优惠券";
+}
+- (NSMutableArray *)canUseArray{
+    if (_canUseArray == nil) {
+        _canUseArray = [[NSMutableArray alloc]init];
+    }
+    return _canUseArray;
+}
+- (void)createTextFieldView{
+    UIView *textView = [[UIView alloc]init];
+    textView.backgroundColor = [UIColor colorWithHexString:@"f3f3f3"];
+    [self.view addSubview:textView];
+    
+    UIButton *button = [UIButton buttonWithType:(UIButtonTypeCustom)];
+    button.backgroundColor = [UIColor whiteColor];
+    [button setTitleColor:[UIColor colorWithHexString:@"39d5b8"] forState:(UIControlStateNormal)];
+    [button setTitle:@"兑 换" forState:UIControlStateNormal];
+    button.layer.borderWidth = 1;
+    button.layer.borderColor = [UIColor colorWithHexString:@"39d5b8"].CGColor;
+    [button addTarget:self action:@selector(onCilck) forControlEvents:(UIControlEventTouchUpInside)];
+    [textView addSubview:button];
+    
+    _disTextField = [[UITextField alloc]init];
+    _disTextField.placeholder = @"请输入兑换码";
+    _disTextField.borderStyle = UITextBorderStyleRoundedRect;
+    [textView addSubview:_disTextField];
+    [textView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(0);
+        make.left.right.mas_equalTo(0);
+        make.height.mas_equalTo(50);
+    }];
+    [button mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.right.mas_equalTo(-15);
+        make.top.mas_equalTo(10);
+        make.bottom.mas_equalTo(-10);
+        make.width.mas_equalTo(55);
+    }];
+    [_disTextField mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(10);
+        make.bottom.mas_equalTo(-10);
+        make.left.mas_equalTo(20);
+        make.right.mas_equalTo(button.mas_left).offset(-15);
+    }];
+    
+}
+- (void)onCilck{
+     [_disTextField resignFirstResponder];
+    if (_disTextField.text.length > 0) {
+        NSString *summary = [[NSString stringWithFormat:@"%@%@%@",[UtilTool getCustomId],_disTextField.text,SECRET_KEY] MD5];
+      
+        NSString *Url = [NSString stringWithFormat:@"%@/%@/%@/%@",APP_URL(receiveCoupon),[UtilTool getCustomId],_disTextField.text,summary];
+        [NetWorkEngine getRequestUse:(self) WithURL:Url WithDic:nil needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+            [self createRequest:1];
+        } error:^(NSString *error) {
+            
+        } failure:^(NSString *fail) {
+            
+        }];
+    }
+}
+- (void)createRefresh{
+    _indexPage = 1;
+    _isLoad = NO;
+    _isRefresh = NO;
+    [self MJRefresh];
+}
+- (void)MJRefresh{
+    __weak typeof (self)weakself = self;
+    // 下拉刷新
+    _disTableView.mj_header= [MJRefreshNormalHeader headerWithRefreshingBlock:^{
+        // 模拟延迟加载数据，因此2秒后才调用（真实开发中，可以移除这段gcd代码）
+        
+        if (weakself.isRefresh) {
+            return ;
+        }
+        weakself.indexPage = 1;
+        weakself.isRefresh = YES;
+       [weakself createRequest: weakself.indexPage];
+    }];
+    [_disTableView.mj_header beginRefreshing];
+    _disTableView.mj_footer = [MJRefreshBackNormalFooter footerWithRefreshingBlock:^{
+        if (weakself.isLoad) {
+            return ;
+        }
+        weakself.indexPage++;
+        weakself.isLoad = YES;
+        [weakself createRequest:weakself.indexPage];
+    }];
+}
+- (void)createRequest:(NSInteger)index{
+    NSUserDefaults *userDefaultes = [NSUserDefaults standardUserDefaults];
+    NSString *userId = [userDefaultes objectForKey:@"customerId"];
+    
+    NSDate *currentDate = [NSDate date];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"YYYYMMddHHmmss"];
+    NSString* dateString = [formatter stringFromDate:currentDate];
+    
+    NSDictionary *paramDic = [NSDictionary dictionaryWithObjectsAndKeys:userId,@"customerId",[NSString stringWithFormat:@"%ld",(long)index],@"pageIndex",@"100201",@"couponStatus",dateString,@"timestamp", nil];
+
+    [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(getCouponList) WithDic:paramDic needEncryption:YES needAlert:YES showHud:NO success:^(NSURLSessionDataTask *task, id responseObject) {
+        NSArray *dataArray = responseObject[@"couponList"];
+        for (NSDictionary *temDict in dataArray){
+
+            CouponModel *model = [[CouponModel alloc] init];
+            [model setValuesForKeysWithDictionary:temDict];
+            __block BOOL isExist = NO;
+            [self.canUseArray enumerateObjectsUsingBlock:^(CouponModel *obj, NSUInteger idx, BOOL *stop) {
+                if ([obj.couponId isEqualToString:model.couponId]) {
+                    isExist = YES;
+                    *stop = YES;
+                }
+            }];
+        if (!isExist) {
+            [self.canUseArray addObject:model];
+        }
+        }
+        [self createTable];
+        [_disTableView reloadData];
+        self.isRefresh = NO;
+        self.isLoad = NO;
+        [_disTableView.mj_header endRefreshing];
+       [_disTableView.mj_footer endRefreshing];
+        if (self.canUseArray.count == 0) {
+            MyLog(@"%@",responseObject[@"errorInfo"]);
+        }
+        
+    } error:^(NSString *error) {
+        self.isRefresh = NO;
+        self.isLoad = NO;
+        [_disTableView.mj_header endRefreshing];
+        [_disTableView.mj_footer endRefreshing];
+        MyLog(@"%@",error);
+    } failure:^(NSString *fail) {
+        self.isRefresh = NO;
+        self.isLoad = NO;
+        [_disTableView.mj_header endRefreshing];
+        [_disTableView.mj_footer endRefreshing];
+    }];
+}
+- (void)createTable{
+    _disTableView.tableHeaderView = [self createHeadView];
+}
+- (void)createTableView{
+    _disTableView = [[UITableView alloc]initWithFrame:CGRectMake(0, 50, SCREEN_WIDTH, SCREEN_HEIGHT-114) style:UITableViewStylePlain];
+    _disTableView.delegate = self;
+    _disTableView.dataSource = self;
+    _disTableView.tableFooterView = [self createFootView];
+    [_disTableView registerNib:[UINib nibWithNibName:@"NewDiscountCell" bundle:nil] forCellReuseIdentifier:@"disCountCellID"];
+    [self.view addSubview:_disTableView];
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return self.canUseArray.count;
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    NewDiscountCell *cell = [tableView dequeueReusableCellWithIdentifier:@"disCountCellID" forIndexPath:indexPath];
+    CouponModel *model = self.canUseArray[indexPath.row];
+    cell.discountTypeL.text = model.vouchersName;
+    NSArray *array = [model.parkingNames componentsSeparatedByString:@","];
+    
+    
+    if ([UtilTool isBlankString:model.parkingNames] == NO) {
+        if (array.count == 1) {
+            cell.parkDiscountL.text = [NSString stringWithFormat:@"仅限于%@停车场使用",array[0]];
+        }else{
+            cell.parkDiscountL.text = [NSString stringWithFormat:@"仅限于%@等%ld个停车场使用",array[0],(unsigned long)array.count-1];
+        }
+        
+        cell.parkDiscountL.hidden = NO;
+    }else{
+        cell.parkDiscountL.hidden = YES;
+    }
+    cell.infoL.text = [NSString stringWithFormat:@"•满%.0f元可用,%@",model.minconsumption,model.exclusionRule];
+    
+    
+    if ([model.couponType isEqualToString:@"1"]) {//面值优惠
+        cell.moneyL.text = [NSString stringWithFormat:@"%.0f元",model.parAmount];
+    }else{
+        cell.moneyL.text = [NSString stringWithFormat:@"%.1f折",(float)(model.parDiscount/10)];
+    }
+    NSMutableAttributedString *attributedStr = [[NSMutableAttributedString alloc]initWithString:cell.moneyL.text];
+    [attributedStr addAttribute:NSFontAttributeName value:[UIFont fontWithName:@"Arial-BoldItalicMT" size:17] range:NSMakeRange(attributedStr.length-1, 1)];
+    cell.moneyL.attributedText = attributedStr;
+    switch ([model.couponKind integerValue]) {
+        case 0:
+        {
+            cell.discountTypeL.text = @"通用券";
+            cell.colorType = GreenColor;
+        }
+            break;
+            
+        case 1:
+        {
+            cell.discountTypeL.text = @"停车券";
+            cell.colorType = PurpleColor;
+            
+        }
+            break;
+        case 2:
+        {
+            cell.discountTypeL.text = @"月租产权券";
+            cell.colorType = OrangeColor;
+            
+        }
+            break;
+        case 3:
+        {
+            cell.discountTypeL.text = @"代客泊车券";
+            cell.colorType = OrangeColor;
+        }
+            break;
+            
+        case 4:
+        {
+            cell.discountTypeL.text = @"车管家券";
+            cell.colorType = GreenColor;
+            
+        }
+            break;
+            
+        case 5:
+        {
+            cell.discountTypeL.text = @"洗车券";
+            cell.colorType = GreenColor;
+            
+        }
+            break;
+            
+        default:
+            break;
+    }
+    cell.timeL.text = [NSString stringWithFormat:@"•%@至%@",model.effectiveBegin,model.effectiveEnd];
+    
+    [cell layoutSubviews];
+    return cell;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    return 107;
+}
+
+- (UIView *)createFootView{
+    UIView *footView = [[UIView alloc]initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 30)];
+    UIButton *footButton = [UIButton buttonWithType:(UIButtonTypeCustom)];
+    footButton.backgroundColor = [UIColor colorWithHexString:@"f5f5f5"];
+    [footButton setTitle:@"点击查看 已过期优惠劵 >" forState:UIControlStateNormal];
+    [footButton setTitleColor:[UIColor colorWithHexString:@"333333"] forState:(UIControlStateNormal)];
+    NSMutableAttributedString *attribute = [UtilTool getLableText:@"点击查看 已过期优惠劵 >"changeText:@" 已过期优惠劵 >" Color:[UIColor colorWithHexString:@"39d5b8"] font:13];
+    [footButton setAttributedTitle:attribute forState:UIControlStateNormal];
+    footButton.titleLabel.font = [UIFont systemFontOfSize:13];
+    [footButton addTarget:self action:@selector(onNoUserDistances) forControlEvents:(UIControlEventTouchUpInside)];
+    [footView addSubview:footButton];
+    
+    [footButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.right.left.top.bottom.mas_equalTo(0);
+    }];
+    
+    return footView;
+    
+}
+- (UIView *)createHeadView{
+    UILabel *headL = [UtilTool createLabelFrame:CGRectMake(0, 0, SCREEN_WIDTH, 20) title:[NSString stringWithFormat:@"    您有%ld张可使用优惠劵",self.canUseArray.count] textColor:[UIColor colorWithHexString:@"333333"] font:[UIFont systemFontOfSize:13] textAlignment:NSTextAlignmentLeft numberOfLine:0];
+    headL.backgroundColor = [UIColor colorWithHexString:@"f5f5f5"];
+    return headL;
+}
+- (void)onNoUserDistances{
+    OldCouponController *choose = [[OldCouponController alloc]init];
+    [self.rt_navigationController pushViewController:choose animated:YES];
+}
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

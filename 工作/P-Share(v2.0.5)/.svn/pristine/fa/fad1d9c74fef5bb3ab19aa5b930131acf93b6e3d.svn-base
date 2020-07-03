@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15A284" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="CarKindVC">
+            <connections>
+                <outlet property="tableV" destination="lcJ-Jd-yf6" id="aeC-7V-43T"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sfx-zR-JGt"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="hqZ-Fk-OGu">
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="64"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="选品牌" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="MBP-wo-lwp">
+                            <rect key="frame" x="112" y="34" width="150" height="20"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="150" id="h5I-Jo-7yk"/>
+                                <constraint firstAttribute="height" constant="20" id="ocJ-T2-Y6t"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="19"/>
+                            <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="defaultBack" translatesAutoresizingMaskIntoConstraints="NO" id="l8h-ex-tji">
+                            <rect key="frame" x="15" y="34" width="15" height="20"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="15" id="S5N-6a-EyV"/>
+                                <constraint firstAttribute="height" constant="20" id="n3w-8d-bUd"/>
+                            </constraints>
+                        </imageView>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="PGD-Ti-a9U">
+                            <rect key="frame" x="0.0" y="20" width="60" height="44"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="60" id="XXf-AJ-5mM"/>
+                            </constraints>
+                            <state key="normal">
+                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                            </state>
+                            <connections>
+                                <action selector="backVC:" destination="-1" eventType="touchUpInside" id="iq0-xP-KYm"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" red="0.22352941179999999" green="0.83529411760000005" blue="0.72156862749999995" alpha="1" colorSpace="calibratedRGB"/>
+                    <constraints>
+                        <constraint firstItem="l8h-ex-tji" firstAttribute="leading" secondItem="hqZ-Fk-OGu" secondAttribute="leading" constant="15" id="64p-Eg-Djj"/>
+                        <constraint firstAttribute="centerX" secondItem="MBP-wo-lwp" secondAttribute="centerX" id="6Jt-FM-qL9"/>
+                        <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="64" id="D5Y-Ii-KFW"/>
+                        <constraint firstAttribute="bottom" secondItem="PGD-Ti-a9U" secondAttribute="bottom" id="E4l-gA-SaH"/>
+                        <constraint firstAttribute="height" constant="64" id="Jr2-wT-WqA"/>
+                        <constraint firstAttribute="height" relation="lessThanOrEqual" constant="64" id="Rux-Qa-HnJ"/>
+                        <constraint firstItem="PGD-Ti-a9U" firstAttribute="top" secondItem="hqZ-Fk-OGu" secondAttribute="top" constant="20" id="ZiB-Ce-fTt"/>
+                        <constraint firstAttribute="height" relation="lessThanOrEqual" constant="64" id="ciB-a4-lr1"/>
+                        <constraint firstItem="MBP-wo-lwp" firstAttribute="centerY" secondItem="l8h-ex-tji" secondAttribute="centerY" id="czO-hg-lah"/>
+                        <constraint firstAttribute="bottom" secondItem="MBP-wo-lwp" secondAttribute="bottom" constant="10" id="lWJ-IP-QOF"/>
+                        <constraint firstItem="PGD-Ti-a9U" firstAttribute="leading" secondItem="hqZ-Fk-OGu" secondAttribute="leading" id="pE6-tu-6OY"/>
+                    </constraints>
+                    <variation key="default">
+                        <mask key="constraints">
+                            <exclude reference="D5Y-Ii-KFW"/>
+                            <exclude reference="Rux-Qa-HnJ"/>
+                            <exclude reference="ciB-a4-lr1"/>
+                        </mask>
+                    </variation>
+                </view>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="lcJ-Jd-yf6">
+                    <rect key="frame" x="0.0" y="64" width="375" height="603"/>
+                    <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    <connections>
+                        <outlet property="dataSource" destination="-1" id="HYe-2x-mI7"/>
+                        <outlet property="delegate" destination="-1" id="esP-UA-LwN"/>
+                    </connections>
+                </tableView>
+            </subviews>
+            <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+            <constraints>
+                <constraint firstItem="lcJ-Jd-yf6" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="4PB-Vi-j7N"/>
+                <constraint firstAttribute="bottom" secondItem="lcJ-Jd-yf6" secondAttribute="bottom" id="Gxi-cU-XTn"/>
+                <constraint firstItem="hqZ-Fk-OGu" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="KIz-h7-nHV"/>
+                <constraint firstAttribute="trailing" secondItem="lcJ-Jd-yf6" secondAttribute="trailing" id="Qfc-KX-FxG"/>
+                <constraint firstItem="lcJ-Jd-yf6" firstAttribute="top" secondItem="hqZ-Fk-OGu" secondAttribute="bottom" id="k6K-t8-pMH"/>
+                <constraint firstAttribute="trailing" secondItem="hqZ-Fk-OGu" secondAttribute="trailing" id="kQy-Wr-Uo1"/>
+                <constraint firstItem="hqZ-Fk-OGu" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="lRF-CZ-54h"/>
+            </constraints>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina47"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="defaultBack" width="15" height="20"/>
+    </resources>
+</document>

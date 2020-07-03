@@ -1,0 +1,324 @@
+//
+//  CarDetailAlert.m
+//  P-Share
+//
+//  Created by 亮亮 on 16/4/27.
+//  Copyright © 2016年 曹亮亮. All rights reserved.
+//
+
+#import "CarDetailAlert.h"
+#import "TimePickerView.h"
+@interface CarDetailAlert ()
+{
+    TimePickerView *_pickerView;
+    __block UIAlertView *_alert;
+    NSString *_day;
+    NSString *_hours;
+    NSString *_miunte;
+    
+    BOOL _isOk;
+}
+@property (nonatomic,strong) UIView *bgView;
+
+@end
+
+@implementation CarDetailAlert
+
+
+- (instancetype)initWithInfo:(NSString *)info{
+
+    self = [super init];
+    
+    if (self) {
+        
+        
+        self = [[[NSBundle mainBundle]loadNibNamed:@"CarDetailAlert" owner:nil options:nil]lastObject];
+        CGFloat height = [MyUtil getStringHeightWithString:info Font:12 MaxWitdth:281-28];
+        
+        // 初始化设置
+        UIWindow *window = [UIApplication sharedApplication].keyWindow;
+        self.center = CGPointMake(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+        self.bounds = CGRectMake(0, 0, 281, 380+height-29);
+        [window addSubview:self.bgView];
+        [window addSubview:self];
+        
+        
+    }
+    
+    return self;
+    
+}
+
+- (void)setRuleType:(RULETYPE)ruleType
+{
+    _ruleType = ruleType;
+    if (ruleType == RULETYPEONE) {
+//        不显示
+        _detailPrice.hidden = YES;
+        _viewTopLayout1.priority = 750;
+        _viewTopLayout2.priority = 800;
+        self.bounds = CGRectMake(0, 0, 281, self.bounds.size.height-20);
+//
+        
+    }else if (ruleType == RULETYPETWO){
+//        显示
+        
+        _detailPrice.hidden = NO;
+        _viewTopLayout1.priority = 800;
+        _viewTopLayout2.priority = 750;
+
+    }
+}
+//页面设置
+- (void)awakeFromNib {
+    
+    // 一次性的设置
+    
+    self.layer.cornerRadius = 5;
+    self.clipsToBounds =YES;
+    self.todayTimeL.layer.cornerRadius = 5;
+    self.todayTimeL.clipsToBounds = YES;
+
+    self.getCarTimeL.layer.cornerRadius = 5;
+    self.getCarTimeL.clipsToBounds = YES;
+    self.getCarTimeL.layer.borderWidth = 1;
+    self.getCarTimeL.layer.borderColor = [MyUtil colorWithHexString:@"e0e0e0"].CGColor;
+    [self addColorForString:@"0"];
+    NSDate *currentDate = [NSDate date];//获取当前时间，日期
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"HH:mm"];
+    NSString *dateString = [dateFormatter stringFromDate:currentDate];
+    self.todayTimeL.text =[NSString stringWithFormat:@" 今日:  %@",dateString];
+    
+    UITapGestureRecognizer *tap = [[UITapGestureRecognizer alloc]initWithTarget:self action:@selector(onClickGetCarTimeL)];
+    self.getCarTimeL.userInteractionEnabled = YES;
+    [self.getCarTimeL addGestureRecognizer:tap];
+}
+
+- (void)setParkingModel:(ParkingModel *)parkingModel
+{
+    _parkingModel = parkingModel;
+    _parkName.text = parkingModel.parkingName;
+}
+- (void)setCarModel:(CarModel *)carModel
+{
+    _carModel = carModel;
+    _CarNum.text = carModel.carNumber;
+}
+
+- (void)onClickGetCarTimeL{
+    CGFloat selfHight = SCREEN_HEIGHT/2+357/2;
+    if ((selfHight - (SCREEN_HEIGHT-200)) > 0) {
+        [UIView animateWithDuration:0.2 animations:^{
+            self.center = CGPointMake(SCREEN_WIDTH/2, SCREEN_HEIGHT/2-(selfHight - (SCREEN_HEIGHT-200)));
+        }];
+    }
+    
+    if (!_pickerView) {
+         _pickerView = [[TimePickerView alloc]init];
+    }
+    __weak typeof(self) myself = self;
+    _pickerView.myblock = ^(NSString *day,NSString *hour,NSString *miunte){
+        _day = day;
+        _hours = hour;
+        _miunte = miunte;
+        myself.getCarTimeL.text = [NSString stringWithFormat:@" %@  %@:%@",day,hour,miunte];
+        NSDate *date = [NSDate date];
+        NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+        [dateFormatter setDateFormat:@"YYYY-MM-dd HH:mm:ss"];
+        NSString *startDate = [dateFormatter stringFromDate:date];
+        NSString *endDate;
+        if ([day isEqualToString:@"今日"]) {
+            endDate = [NSString stringWithFormat:@"%@ %@:%@:00",[myself getToday:[NSDate date]],hour,miunte];
+        }else
+        {
+            endDate = [NSString stringWithFormat:@"%@ %@:%@:00",[myself getTomorrowDay:[NSDate date]],hour,miunte];
+        }
+        _startTime = startDate;
+        _endTime = endDate;
+        NSDictionary *dic = [NSDictionary dictionaryWithObjectsAndKeys:[MyUtil getVersion],@"version",myself.parkingModel.parkingId,@"parkingId",startDate,@"startTime",endDate,@"endTime", nil];
+        
+        
+        [RequestModel requestDaiBoWithURL:calcParkPrice
+                                  WithDic:dic Completion:^(NSDictionary *dic) {
+                                      
+                                      if ([[dic objectForKey:@"errorNum"] isEqualToString:@"0"]) {
+                                          
+                                          
+                                          _isOk = YES;
+                                          
+                                          
+                                          myself.planManeyL.text = [NSString stringWithFormat:@"预计费用%@元",dic[@"data"][@"price"]];
+                                          [myself addColorForString:dic[@"data"][@"price"]];
+                                          myself.detailPrice.text = dic[@"data"][@"description"];
+                                          [UIView animateWithDuration:0.2 animations:^{
+                                              
+                                              myself.center = CGPointMake(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+                                          }];
+
+                                      }else
+                                      {
+                                          _isOk = NO;
+                                          UIAlertView *aler = [[UIAlertView alloc] initWithTitle:nil message:[dic objectForKey:@"errorInfo"] delegate:nil cancelButtonTitle:nil otherButtonTitles:@"确定", nil];
+                                          [aler show];
+                                          aler = nil;
+                                      }
+                                      
+                                      
+                                      
+                                  } Fail:^(NSString *error) {
+                                      _isOk = NO;
+                                      
+                                      UIAlertView *aler = [[UIAlertView alloc] initWithTitle:nil message:error delegate:nil cancelButtonTitle:nil otherButtonTitles:@"确定", nil];
+                                      [aler show];
+                                      aler = nil;
+                                      
+                                      
+                                  }];
+        
+
+        
+    };
+    _pickerView.cblock = ^(){
+        [UIView animateWithDuration:0.2 animations:^{
+            
+             myself.center = CGPointMake(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+        }];
+
+       
+    };
+    [_pickerView show];
+    
+}
+/**
+ *  给字符串添加颜色
+ *
+ *  @param str nil
+ */
+- (void)addColorForString:(NSString *)str
+{
+    NSMutableAttributedString *noteStr =[MyUtil getLableText:self.planManeyL.text changeText:str Color:NEWMAIN_COLOR font:25];
+    [self.planManeyL setAttributedText:noteStr];
+}
+#pragma mark - 得到日期
+-(NSString *)getTomorrowDay:(NSDate *)aDate
+{
+    NSCalendar *gregorian = [[NSCalendar alloc] initWithCalendarIdentifier:NSGregorianCalendar] ;
+    NSDateComponents *components = [gregorian components:NSWeekdayCalendarUnit | NSYearCalendarUnit | NSMonthCalendarUnit | NSDayCalendarUnit fromDate:aDate];
+    [components setDay:([components day]+1)];
+    NSDate *beginningOfWeek = [gregorian dateFromComponents:components];
+    NSDateFormatter *dateday = [[NSDateFormatter alloc] init];
+    [dateday setDateFormat:@"YYYY-MM-dd"];
+    return [dateday stringFromDate:beginningOfWeek];
+}
+- (NSString *)getToday:(NSDate *)date
+{
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"YYYY-MM-dd"];
+    NSString *day = [dateFormatter stringFromDate:date];
+    return day;
+    
+}
+#pragma mark - 懒加载
+- (UIView *)bgView {
+    
+    if (_bgView ==nil) {
+        
+        _bgView = [[UIView alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        
+        _bgView.backgroundColor = [[UIColor blackColor] colorWithAlphaComponent:0.5];
+        
+        _bgView.hidden =YES;
+        
+    }
+    
+    return _bgView;
+    
+}
+
+#pragma mark -
+#pragma mark - view显示
+- (void)show {
+   self.transform = CGAffineTransformMakeScale(1.2, 1.2);
+    [UIView animateWithDuration:0.35 delay:0 usingSpringWithDamping:0.7 initialSpringVelocity:0.8 options:UIViewAnimationOptionCurveEaseInOut animations:^{
+        
+        self.bgView.hidden =NO;
+        
+        self.bgView.userInteractionEnabled =NO;
+        
+        
+        self.transform = CGAffineTransformMakeScale(1, 1);
+       
+
+        
+    } completion:^(BOOL finished) {
+      
+    
+        self.hidden = NO;
+        self.bgView.userInteractionEnabled =YES;
+     
+    }];
+    
+    
+}
+#pragma mark -
+#pragma mark - view消失
+- (void)hide {
+
+    [UIView animateWithDuration:.35 animations:^{
+        
+        self.transform = CGAffineTransformMakeScale(0.9, 0.9);
+        [self performSelector:@selector(MyClick) withObject:self afterDelay:0.2];
+        
+    } completion:^(BOOL finished) {
+        if (finished) {
+       
+
+        }
+    }];
+    
+    if (_pickerView) {
+        [_pickerView hide];
+    }
+}
+- (void)MyClick{
+    if (self.bgView)
+    {
+        [self.bgView removeFromSuperview];
+    }
+    [self removeFromSuperview];
+}
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+*/
+- (IBAction)tureBtn:(UIButton *)sender {
+    if (_day == nil || _hours == nil || _miunte == nil) {
+        ALERT_VIEW(@"请先选择取车时间");
+        _alert = nil;
+        return;
+    }
+    if ([self.delegate respondsToSelector:@selector(dataPickerView:hourString:miunteString:)]) {
+        
+        
+#pragma mark ------------************
+        
+        if (_isOk) {
+            
+            
+            [self.delegate dataPickerView:_startTime hourString:_endTime miunteString:_carModel.carNumber];
+        }
+        
+        
+     
+        
+    }
+}
+
+- (IBAction)hideBtn:(UIButton *)sender {
+    [self hide];
+}
+@end

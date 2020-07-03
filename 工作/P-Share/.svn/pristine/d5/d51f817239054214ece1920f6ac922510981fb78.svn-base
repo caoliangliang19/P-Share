@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="10174" systemVersion="15C50" minimumToolsVersion="Automatic">
+    <entity name="SearchModel" representedClassName="SearchModel" syncable="YES">
+        <attribute name="customerId" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="isCollection" optional="YES" attributeType="Boolean" syncable="YES"/>
+        <attribute name="searchDistrict" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="searchLatitude" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="searchLongitude" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="searchTitle" optional="YES" attributeType="String" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="SearchModel" positionX="-63" positionY="-18" width="128" height="135"/>
+    </elements>
+</model>

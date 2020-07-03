@@ -1,0 +1,180 @@
+//
+//  TimeLineViewController.m
+//  P-Share
+//
+//  Created by fay on 16/6/16.
+//  Copyright © 2016年 曹亮亮. All rights reserved.
+//
+
+#import "TimeLineViewController.h"
+#import "UITableView+FDTemplateLayoutCell.h"
+#import "TimelineCell.h"
+#import "TimeLineView.h"
+#define  Identifier     @"TimelineCell"
+@interface TimeLineViewController ()
+{
+    NSArray *_temDataArray;
+    
+    //订单类型
+    int _payType;
+    NSUInteger _orderState;
+    
+}
+@end
+
+@implementation TimeLineViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.title = @"Time Line";
+    _payType = 0;
+    
+    _orderState = 0;
+    self.tableView.backgroundColor = [MyUtil colorWithHexString:@"eeeeee"];
+
+    [self.tableView registerClass:[TimelineCell class] forCellReuseIdentifier:Identifier];
+    
+    self.tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    [self reloadDaiBoData];
+//    ,@6,@7,@8,@9,@10,@11
+//    _temDataArray = @[@0,@1,@2,@3,@4,@5,@6,@7,@8,@9,@10,@11];
+
+//    _temDataArray = @[@0,@1,@2,@3,@4,@5];
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    self.navigationController.navigationBarHidden = NO;
+    
+}
+#pragma mark -- 定时器刷新数据
+- (void)reloadDaiBoData
+{
+    MyLog(@"-------------------定时器执行------------------------");
+    
+   
+        
+        NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithObjectsAndKeys:[MyUtil getVersion],@"version",[MyUtil getCustomId],@"customerId",@"京ABC777",@"carNumber", nil];
+        
+        
+       [RequestModel requestDaiBoOrder:queryParkerById WithType:@"getOrder" WithDic:dic Completion:^(NSArray *dataArray) {
+           TemParkingListModel *model = dataArray.lastObject;
+           if ([model.orderStatus integerValue] == 1) {
+               _orderState = 1;
+           }else if([model.orderStatus integerValue] == 2){
+               _orderState = 2;
+           }else if([model.orderStatus integerValue] == 4){
+               _orderState = 4;
+           }else if([model.orderStatus integerValue] == 8){
+               _orderState = 8;
+           }else if([model.orderStatus integerValue] == 12){
+               _orderState = 11;
+           }
+           _temDataArray = [NSMutableArray arrayWithArray:dataArray];
+           
+           [self.tableView reloadData];
+           
+        } Fail:^(NSString *error) {
+            
+           
+            
+           
+            
+        }];
+        
+   
+    
+}
+- (void)viewWillDisappear:(BOOL)animated
+{
+    self.navigationController.navigationBarHidden = YES;
+
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+}
+
+#pragma mark - Table view data source
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return _orderState;
+}
+
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+   
+    TimelineCell *cell = [tableView dequeueReusableCellWithIdentifier:Identifier];
+    TemParkingListModel *model = _temDataArray[0];
+    cell.model = model;
+//    [cell upDataCellData:model row:indexPath.row];
+    [cell layoutIfNeeded];
+    [MyUtil drawDashLine:cell.lineView lineLength:3 lineSpacing:2 lineColor:[MyUtil colorWithHexString:@"6d7e8c"]];
+    
+    
+    [self configureCell:cell atIndexPath:indexPath];
+    
+    return cell;
+}
+- (void)configureCell:(UITableViewCell *)cell atIndexPath:(NSIndexPath *)indexPath
+{
+    TimelineCell *newCell = (TimelineCell *)cell;
+//    设置订单类型
+    newCell.payTyle = _payType;
+//    设置订单状态
+//    newCell.payStatus = [_temDataArray[indexPath.row] intValue];
+    newCell.payStatus = (int)indexPath.row;
+    
+    if (indexPath.row == 0) {
+        newCell.cellPosition = TimelineCellPositionTop;
+    }else if (indexPath.row == _temDataArray.count-1){
+        newCell.cellPosition = TimelineCellPositionBottom;
+    }else
+    {
+        newCell.cellPosition = TimelineCellPositionMiddle;
+    }
+    newCell.fd_enforceFrameLayout = YES;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+//    CGFloat height = [tableView fd_heightForCellWithIdentifier:Identifier cacheByIndexPath:indexPath configuration:^(UITableViewCell *cell) {
+//        [self configureCell:cell atIndexPath:indexPath];
+//    }];
+//    MyLog(@"%f",height);
+//
+//    if (height>0) {
+//        MyLog(@"%ld行高＊＊＊＊＊＊＊ %f",indexPath.row,height);
+//
+//    }
+//    
+//    return height;
+    
+
+    if (_payType == 0) {//代泊
+        if (indexPath.row == 1 || indexPath.row == 3) {
+            return 220;
+        }else
+        {
+            return 120;
+        }
+    }else
+    {//预约
+        if (indexPath.row == 0 || indexPath.row == 2 || indexPath.row == 4) {
+            return 100;
+        }else
+        {
+            return 120;
+        }
+        
+    }
+    
+    
+    
+}
+
+
+
+@end

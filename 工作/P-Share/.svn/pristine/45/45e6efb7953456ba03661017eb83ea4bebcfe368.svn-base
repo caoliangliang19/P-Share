@@ -1,0 +1,519 @@
+//
+//  AddCarInfoViewController.m
+//  P-Share
+//
+//  Created by 杨继垒 on 15/9/7.
+//  Copyright (c) 2015年 杨继垒. All rights reserved.
+//
+
+#import "AddCarInfoViewController.h"
+#import "CLLTextView.h"
+#import "NewCarListVC.h"
+#import "DriveImageView.h"
+#import "DatePickView.h"
+#import "CustomAlertView.h"
+#import "ORCModel.h"
+
+@interface AddCarInfoViewController ()<UITextFieldDelegate,UIAlertViewDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate>
+{
+    CLLTextView *_carNumTextView;
+    NSString    *_driveTime;
+    NSString    *_carBrane;
+    
+    NSString    *_tradeName;
+    NSString    *_carBrand;
+    NSString    *_carSeries;
+    NSString    *_displacement;
+    NSString    *_styleYear;
+    NSString    *_intakeType;
+
+    ORCModel    *_orcModel;
+    
+}
+@property (weak, nonatomic) IBOutlet UIButton *sureBtn;
+@property (weak, nonatomic) IBOutlet UIView *carNumView;
+@property (weak, nonatomic) IBOutlet UIButton *chooseCarKindButton;
+
+@property (weak, nonatomic) IBOutlet UISwitch *autoPaySwitch;
+@property (weak, nonatomic) IBOutlet UITextField *distanceT;
+
+@property (weak, nonatomic) IBOutlet UIButton *timeButton;
+@property (weak, nonatomic) IBOutlet UIButton *autoPayButton;
+@property (weak, nonatomic) IBOutlet UITextField *VINT;
+@property (weak, nonatomic) IBOutlet UITextField *engineNumberT;
+//    是否开启自动支付
+@property (nonatomic,assign)BOOL        isAutoPay;
+
+@property (nonatomic,copy)NSString      *carNum;
+@end
+
+@implementation AddCarInfoViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    _distanceT.delegate = self;
+    _VINT.delegate = self;
+    _engineNumberT.delegate = self;
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(getCarType:) name:KUSER_CHOOSE_CARTYPE object:nil];
+
+    _sureBtn.layer.cornerRadius = 6;
+    _sureBtn.layer.masksToBounds = YES;
+    
+    self.title = @"添加车辆";
+    [self loadKayBoard];
+    [self loadRightBarItem];
+    
+}
+- (void)loadRightBarItem
+{
+    UIBarButtonItem *rightBarItem = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"camera"] style:UIBarButtonItemStyleBordered target:self action:@selector(ORCRecognize)];
+    self.navigationItem.rightBarButtonItem = rightBarItem;
+}
+- (void)ORCRecognize
+{
+    [self textFieldRegisterFirstResponse];
+    [_carNumTextView onHidden];
+
+    UIAlertController *alertSheet = [UIAlertController alertControllerWithTitle:@"选择照片" message:@"请上传行驶证照片" preferredStyle:UIAlertControllerStyleActionSheet];
+    
+    UIAlertAction *photoAction = [UIAlertAction actionWithTitle:@"相册" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+       
+        UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+        picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+        picker.delegate = self;
+        [self presentViewController:picker animated:YES completion:nil];
+        
+
+    }];
+    UIAlertAction *cameraAction = [UIAlertAction actionWithTitle:@"拍照" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+            return;
+        }else {
+            UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+            picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+            picker.delegate = self;
+            [self presentViewController:picker animated:YES completion:nil];
+        }
+       
+    }];
+    UIAlertAction *cancelAction = [UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+        [alertSheet dismissViewControllerAnimated:YES completion:nil];
+    }];
+    [alertSheet addAction:photoAction];
+    [alertSheet addAction:cameraAction];
+    [alertSheet addAction:cancelAction];
+    [self presentViewController:alertSheet animated:YES completion:nil];
+}
+- (void)loadKayBoard
+{
+    CLLTextView *carNumTextView = [[CLLTextView alloc]initWithFrame:CGRectMake(0, 0, [UIScreen mainScreen].bounds.size.width, 50)];
+    _carNumTextView = carNumTextView;
+    WS(ws)
+    carNumTextView.CLLTextViewBlock = ^(NSString *carNum){
+        ws.carNum = carNum;
+        MyLog(@"%@",carNum);
+    };
+    [_carNumView addSubview:carNumTextView];
+
+    [carNumTextView onShow];
+
+}
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    self.automaticallyAdjustsScrollViewInsets = YES;
+    
+}
+
+#pragma mark -- 选择车类型
+- (IBAction)chooseCarType:(UIButton *)sender {
+    MyLog(@"选择车类型");
+    [_carNumTextView onHidden];
+    [self textFieldRegisterFirstResponse];
+    NewCarListVC *carKindListVC = [[NewCarListVC alloc] init];
+    [self.rt_navigationController pushViewController:carKindListVC animated:YES complete:nil];
+}
+#pragma mark -- 选择上路时间
+- (IBAction)chooseTime:(UIButton *)sender {
+    [self textFieldRegisterFirstResponse];
+    [_carNumTextView onHidden];
+
+    MyLog(@"选择上路时间");
+    DatePickView *yearMonth = [[DatePickView alloc] init];
+    [yearMonth show];
+    yearMonth.myBlock = ^(NSString *year,NSString *month){
+        NSString *driveTime = [NSString stringWithFormat:@"%@-%.2ld",year,(long)[month integerValue]];
+        _driveTime = driveTime;
+        [sender setTitle:driveTime forState:UIControlStateNormal];
+    };
+
+}
+
+#pragma mark -- 设置自动支付
+- (IBAction)setAutoPay:(UISwitch *)sender {
+    [self textFieldRegisterFirstResponse];
+    [_carNumTextView onHidden];
+    WS(ws)
+    if (sender.isOn == YES) {
+        CustomAlertView *alertView = [[CustomAlertView alloc]initWithFrame:CGRectMake(0, 0, 200, 200) titleName:@"自动支付协议"];
+        [alertView myTitleText:@"1.钱包安全自动支付功能用来支付已开通口袋停线上支付车场的停车费用2.当您的车辆离场时,系统会自动从钱包余额中自动支付本次停车费用,无需其它任何操作3.未开通口袋停线上支付的车场不支持此项功能4.本功能只在钱包的余额大于等于当次待支付费用时生效,当余额不足时,请线下付费或手动进行线上停车缴费功能5.自动支付成功后,对应车牌的车辆将被自动放行6.口袋停在法律规定范围内，对钱包安全自动支付功能涉及的各方面情况拥有解释权" Block:^{
+            ws.isAutoPay = YES;
+            [alertView dismissAlertView];
+            
+        } canBlock:^{
+
+            ws.isAutoPay = NO;
+            [alertView dismissAlertView];
+        }];
+        
+        alertView.backgroundColor = [UIColor whiteColor];
+        [alertView showAlertView];
+    }else{
+        ws.isAutoPay = NO;
+    }
+
+}
+
+#pragma mark -- 获取车辆类型
+- (void)getCarType:(NSNotification *)notifitation
+{
+    NSDictionary *dict = notifitation.userInfo;
+    _carBrand       = dict[@"carBrand"];
+    _tradeName      = dict[@"tradeName"];
+    _carSeries      = dict[@"carSeries"];
+    _displacement   = dict[@"displacement"];;
+    _intakeType     = dict[@"intakeType"];
+    _styleYear      = dict[@"styleYear"];
+    NSString *currentStyleYear = [NSString stringWithFormat:@"%@年产",dict[@"styleYear"]];
+    NSString *displacementShow = dict[@"displacementShow"];
+    if ([UtilTool isBlankString:_carSeries] == YES) {
+        _carSeries = @"";
+    }
+    if ([UtilTool isBlankString:displacementShow] == YES) {
+        displacementShow = @"";
+        _displacement = @"";
+        _intakeType = @"";
+    }
+    if ([UtilTool isBlankString:_styleYear] == YES) {
+        _styleYear = @"";
+    }
+    NSString *carBrane = [NSString stringWithFormat:@"%@ %@ %@ %@",_carBrand,_carSeries,displacementShow,currentStyleYear];
+    _carBrane = carBrane;
+    [_chooseCarKindButton setTitle:carBrane forState:(UIControlStateNormal)];
+}
+- (void)setIsAutoPay:(BOOL)isAutoPay
+{
+    _isAutoPay = isAutoPay;
+    if (isAutoPay) {
+        _autoPaySwitch.on = 1;
+        [self.autoPayButton setTitle:@"已开启钱包自动支付" forState:UIControlStateNormal];
+        [self.autoPayButton setTitleColor:[UIColor colorWithHexString:@"39D5B8"] forState:UIControlStateNormal];
+    }else
+    {
+        _autoPaySwitch.on = 0;
+        [self.autoPayButton setTitle:@"未开启钱包自动支付" forState:UIControlStateNormal];
+        [self.autoPayButton setTitleColor:[UIColor colorWithHexString:@"A7A7A7"] forState:UIControlStateNormal];
+    }
+    
+}
+#pragma mark -- 展示驾照
+- (IBAction)showDrivePhoto:(id)sender {
+    [self textFieldRegisterFirstResponse];
+    [_carNumTextView onHidden];
+    DriveImageView *driveImage = [[DriveImageView alloc]initWithFrame:CGRectZero];
+    [driveImage show];
+}
+
+#pragma mark -- textField  delegate
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField
+{
+    [_carNumTextView onHidden];
+    return YES;
+}
+- (void)textFieldRegisterFirstResponse
+{
+    [_engineNumberT resignFirstResponder];
+    [_VINT resignFirstResponder];
+    [_distanceT resignFirstResponder];
+
+}
+- (BOOL)textField:(UITextField *)textField shouldChangeCharactersInRange:(NSRange)range replacementString:(NSString *)string
+
+{
+    if (textField == self.distanceT) {
+        
+        if (string.length == 0) return YES;
+        
+        NSInteger existedLength = textField.text.length;
+        NSInteger selectedLength = range.length;
+        NSInteger replaceLength = string.length;
+        if (existedLength - selectedLength + replaceLength > 7) {
+            return NO;
+            
+        }
+        return [self validateNumber:string];
+    }
+    
+    return YES;
+}
+- (BOOL)validateNumber:(NSString*)number {
+    BOOL res = YES;
+    NSCharacterSet* tmpSet = [NSCharacterSet characterSetWithCharactersInString:@"0123456789"];
+    int i = 0;
+    while (i < number.length) {
+        NSString * string = [number substringWithRange:NSMakeRange(i, 1)];
+        NSRange range = [string rangeOfCharacterFromSet:tmpSet];
+        if (range.length == 0) {
+            res = NO;
+            break;
+        }
+        i++;
+    }
+    return res;
+}
+
+#pragma mark -- 点击提交
+- (IBAction)commitBtnClick:(id)sender {
+    
+    if (self.carNum.length != 7) {
+        MyLog(@"请填写正确车牌号码");
+        [[GroupManage shareGroupManages] groupAlertShowWithTitle:@"请填写正确车牌号码"];
+        return;
+    }
+    NSMutableDictionary *paramDic = [NSMutableDictionary dictionary];
+    [paramDic setObject:[UtilTool getCustomId] forKey:@"customerId"];
+    [paramDic setObject:_carNum forKey:@"carNumber"];
+    [paramDic setObject:[UtilTool getTimeStamp] forKey:@"timestamp"];
+    [paramDic setObject:[NSString stringWithFormat:@"%ld",(long)_isAutoPay] forKey:@"isAutoPay"];
+
+    if ([UtilTool isBlankString:_tradeName] == NO) {
+        [paramDic setObject:_tradeName forKey:@"tradeName"];
+    }
+    if ([UtilTool isBlankString:_carBrand] == NO) {
+        [paramDic setObject:_carBrand forKey:@"carBrand"];
+    }
+    if ([UtilTool isBlankString:_carSeries] == NO) {
+        [paramDic setObject:_carSeries forKey:@"carSeries"];
+    }
+    if ([UtilTool isBlankString:_displacement] == NO) {
+        [paramDic setObject:_displacement forKey:@"displacement"];
+    }
+    if ([UtilTool isBlankString:_styleYear] == NO) {
+        [paramDic setObject:_styleYear forKey:@"styleYear"];
+    }
+    if ([UtilTool isBlankString:_distanceT.text] == NO) {
+        [paramDic setObject:_distanceT.text forKey:@"travlledDistance"];
+    }
+    if ([UtilTool isBlankString:_intakeType] == NO) {
+        [paramDic setObject:_intakeType forKey:@"intakeType"];
+    }
+    if ([UtilTool isBlankString:_driveTime] == NO) {
+        [paramDic setObject:_driveTime forKey:@"carUseDate"];
+    }
+    
+    if (![UtilTool isBlankString:_VINT.text]) {
+       
+        [paramDic setObject:_VINT.text forKey:@"frameNum"];
+        
+    }
+    if (![UtilTool isBlankString:_engineNumberT.text]) {
+        [paramDic setObject:_engineNumberT.text forKey:@"engineNum"];
+    }
+    
+    if (_car) {
+        [paramDic setObject:_car.carId forKey:@"carId"];
+    }
+
+
+    MyLog(@"%@",paramDic);
+    
+    [NetWorkEngine postRequestWithURL:APP_URL(bindingcar) WithDic:paramDic needEncryption:YES needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        MyLog(@"%@",responseObject);
+        [[NSNotificationCenter defaultCenter] postNotificationName:KUSER_CAR_CHANGE object:nil userInfo:nil];
+        [self.navigationController popViewControllerAnimated:YES];
+
+        
+    } error:^(NSString *error) {
+        MyLog(@"%@",error);
+
+    } failure:^(NSString *fail) {
+        MyLog(@"%@",fail);
+
+    }];
+    
+    
+    
+}
+
+- (void)setCar:(Car *)car
+{
+    _car = car;
+    _carNumTextView.carNum = car.carNumber;
+    //有车型的时候不能修改  当无车型的时候可以修改
+    if ([UtilTool isBlankString:car.carBrand]) {
+        _chooseCarKindButton.userInteractionEnabled = YES;
+    }else{
+        _chooseCarKindButton.userInteractionEnabled = NO;
+    }
+    
+    if ([car.isAutoPay integerValue] == 1) {
+        _autoPaySwitch.on = YES;
+        self.isAutoPay = YES;
+        
+    }else
+    {
+        _autoPaySwitch.on = NO;
+        self.isAutoPay = NO;
+    }
+    
+    self.distanceT.text = car.travlledDistance;
+    if ([UtilTool isBlankString:car.carUseDate] == YES) {
+        [_timeButton setTitle:@"请选择您爱车的上路时间" forState:(UIControlStateNormal)];
+        _driveTime = @"";
+        
+    }else{
+        [_timeButton setTitle:car.carUseDate forState:(UIControlStateNormal)];
+        _driveTime = car.carUseDate;
+    }
+    self.VINT.text = car.frameNum;
+    self.engineNumberT.text = car.engineNum;
+    if ([UtilTool isBlankString:car.carBrand] == NO) {
+        NSString *styleYear = [NSString stringWithFormat:@"%@年产",car.styleYear];
+        
+        if ([UtilTool isBlankString:car.styleYear]) {
+            styleYear = @"";
+        }
+        
+        NSString *typeBtn = [NSString stringWithFormat:@"%@ %@ %@ %@",car.carBrand,car.carSeries,car.displacementShow,styleYear];
+        [_chooseCarKindButton setTitle:typeBtn forState:(UIControlStateNormal)];
+        _carBrand = car.carBrand;
+        _tradeName = car.tradeName;
+        _carSeries = car.carSeries;
+        _displacement = car.displacement;
+        _styleYear = car.styleYear;
+        _intakeType = car.intakeType;
+    }
+
+}
+
+#pragma mark -- 获取图片数据
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
+    
+    if ([info objectForKey:UIImagePickerControllerOriginalImage]) {
+        UIImage *image = nil;
+        image = [info objectForKey:UIImagePickerControllerOriginalImage];
+        
+        [self upLoadVehiclelicense:image];
+        
+        [picker dismissViewControllerAnimated:YES completion:nil];
+        
+    }
+}
+//上传行驶证
+- (void)upLoadVehiclelicense:(UIImage *)image
+{
+    
+    NSString * postPath = @"/rest/160601/ocr/ocr_vehicle.json";
+    NSData *imageData = UIImageJPEGRepresentation(image, 0.5);
+    NSString *result = [imageData base64EncodedString];
+    NSDictionary *dic = @{@"inputs":@[@{@"image":@{@"dataType":@(50),@"dataValue":result}}]};
+    NSData *jsonData = [NSJSONSerialization dataWithJSONObject:dic options:NSJSONWritingPrettyPrinted error:nil];
+    
+    NSString *info = [[NSString alloc] initWithData:jsonData encoding:NSUTF8StringEncoding];
+    
+    NSLog(@"%@",info);
+    
+    NSData *body1 = [info dataUsingEncoding:NSUTF8StringEncoding];
+    
+    NSMutableDictionary *postQueryParams = [[NSMutableDictionary alloc] init];
+    
+    NSMutableDictionary *postHeaderParams = [[NSMutableDictionary alloc] init];
+    
+    [[GroupManage shareGroupManages] groupHubShow];
+    
+    [[HttpUtil instance] httpPost:postPath
+                       pathParams:nil
+                      queryParams:postQueryParams
+                             body:body1
+                     headerParams:postHeaderParams
+                  completionBlock:^(NSData * _Nullable body , NSURLResponse * _Nullable response, NSError * _Nullable error) {
+                      NSLog(@"Response object: %@" , response);
+                      
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [[GroupManage shareGroupManages] groupHubHidden];
+                    });
+                      NSDictionary *responseJSON = [NSJSONSerialization JSONObjectWithData:body options:NSJSONReadingMutableLeaves error:nil];
+                      
+                      if (!responseJSON) {
+                          [[GroupManage shareGroupManages] groupAlertShowWithTitle:@"识别失败"];
+                      }
+                      
+                      NSString *dataStr = responseJSON[@"outputs"][0][@"outputValue"][@"dataValue"];
+                      NSLog(@"Response body: %@" , dataStr);
+                      
+                      NSData *jsonData = [dataStr dataUsingEncoding:NSUTF8StringEncoding];
+                      NSError *err;
+                      
+                      NSDictionary *resultDic = [NSJSONSerialization JSONObjectWithData:jsonData
+                      options:NSJSONReadingMutableContainers                                                                                                            error:&err];
+                      
+                      if(err) {
+                          [[GroupManage shareGroupManages] groupAlertShowWithTitle:@"识别失败"];
+                      }else
+                      {
+                          ORCModel *orcModel = [ORCModel shareObjectWithDic:resultDic];
+                          _orcModel = orcModel;
+                          dispatch_async(dispatch_get_main_queue(), ^{
+                              [self afterLoadSetData];
+                          });
+                      }
+                      
+                  }];
+    
+}
+
+#pragma mark -- 上传行驶证照片之后 赋值数据
+- (void)afterLoadSetData
+{
+    self.VINT.text = _orcModel.vin;
+    self.engineNumberT.text = _orcModel.engine_num;
+    
+    if (![UtilTool isBlankString: _orcModel.register_date]) {
+        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+        [formatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"] ];
+        [formatter setDateFormat:@"yyyyMMdd"];
+        NSDate *inputDate = [formatter dateFromString:_orcModel.register_date];
+        [formatter setDateFormat:@"yyyy-MM"];
+        NSString *result = [formatter stringFromDate:inputDate];
+        _driveTime = result;
+        [_timeButton setTitle:_driveTime forState:UIControlStateNormal];
+    }
+
+    if (_orcModel.plate_num.length == 7) {
+        self.carNum = _orcModel.plate_num;
+        _carNumTextView.carNum = self.carNum;
+        
+    }
+}
+
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker{
+    
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
+
+
+
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+@end
+
+
+
+
+
+
+
+

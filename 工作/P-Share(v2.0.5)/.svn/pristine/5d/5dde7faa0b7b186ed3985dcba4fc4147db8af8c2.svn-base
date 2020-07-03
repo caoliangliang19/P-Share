@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="allHistoryCellId" id="KGk-i7-Jjw" customClass="AllHistoryCell">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="30"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="375" height="29.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="RCj-GI-yJW">
+                        <rect key="frame" x="12" y="0.0" width="363" height="29"/>
+                        <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                        <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="zZI-a9-6tY">
+                        <rect key="frame" x="22" y="13" width="142" height="4"/>
+                        <color key="backgroundColor" red="0.2156862745" green="0.71372549019999998" blue="0.61568627450000002" alpha="1" colorSpace="calibratedRGB"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="142" id="3N9-nU-Dml"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                        <state key="normal" title="查看支付凭证">
+                            <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        </state>
+                        <connections>
+                            <action selector="payBtnClick:" destination="KGk-i7-Jjw" eventType="touchUpInside" id="rGE-5T-LGY"/>
+                        </connections>
+                    </button>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="kKa-QR-ScO">
+                        <rect key="frame" x="12" y="28" width="351" height="1"/>
+                        <color key="backgroundColor" red="0.92030663329999995" green="0.92030663329999995" blue="0.92030663329999995" alpha="1" colorSpace="calibratedRGB"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="1" id="fEp-7g-6IK"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <constraints>
+                    <constraint firstItem="RCj-GI-yJW" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="12" id="3Uw-Tp-RbS"/>
+                    <constraint firstAttribute="bottom" secondItem="kKa-QR-ScO" secondAttribute="bottom" id="5yu-in-ppi"/>
+                    <constraint firstAttribute="trailing" secondItem="kKa-QR-ScO" secondAttribute="trailing" constant="12" id="Nvs-Qo-whz"/>
+                    <constraint firstItem="zZI-a9-6tY" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leadingMargin" constant="14" id="VWg-Xu-6zV"/>
+                    <constraint firstItem="kKa-QR-ScO" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="12" id="acO-cW-6Y7"/>
+                    <constraint firstItem="zZI-a9-6tY" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="13" id="fDM-W5-1iT"/>
+                    <constraint firstAttribute="bottom" secondItem="RCj-GI-yJW" secondAttribute="bottom" id="iC7-Rq-nB1"/>
+                    <constraint firstItem="RCj-GI-yJW" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" id="paN-Sc-RWI"/>
+                    <constraint firstAttribute="trailing" secondItem="RCj-GI-yJW" secondAttribute="trailing" id="qx6-QO-qnp"/>
+                    <constraint firstAttribute="bottom" secondItem="zZI-a9-6tY" secondAttribute="bottom" constant="12" id="yGM-ou-4q6"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="lineView" destination="kKa-QR-ScO" id="OPk-0Z-hq1"/>
+                <outlet property="orderTitleLabel" destination="RCj-GI-yJW" id="TSU-Cb-cmF"/>
+                <outlet property="payBtn" destination="zZI-a9-6tY" id="vRO-xK-ESV"/>
+            </connections>
+            <point key="canvasLocation" x="345.5" y="249"/>
+        </tableViewCell>
+    </objects>
+</document>

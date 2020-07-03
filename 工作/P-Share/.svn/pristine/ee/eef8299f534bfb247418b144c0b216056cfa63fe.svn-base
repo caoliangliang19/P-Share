@@ -1,0 +1,319 @@
+//
+//  NewCarListVC.m
+//  P-Share
+//
+//  Created by fay on 16/7/29.
+//  Copyright © 2016年 曹亮亮. All rights reserved.
+//
+
+#import "NewCarListVC.h"
+#import "FayCollectionView.h"
+#import "FayCollectionViewHeadLayout.h"
+#import "CarBraneCell.h"
+#import "CarBraneReusableView.h"
+#import "SubCarDetailView.h"
+#import "CapacityVC.h"
+#import "AddCarInfoViewController.h"
+
+
+static NSString *const KCellIdentifier          = @"CarBraneCell";
+static NSString *const KReusableViewIdentifier  = @"CarBraneReusableView";
+
+@interface NewCarListVC ()<UICollectionViewDelegate,UICollectionViewDataSource,FayCollectionViewDelegate>
+{
+    UICollectionViewFlowLayout  *_flowLayout;
+    FayCollectionView           *_collectionView;
+    NSMutableArray              *_sectionArray;
+    NSArray                     *_rowsArray;
+    NSMutableDictionary         *_rootDic;
+    UIAlertView                 *_alert;
+    
+    UIView                      *_clearBackView;
+    MBProgressHUD               *_mbView;
+    
+}
+@property (nonatomic,strong)SubCarDetailView    *subCarDetailV;
+
+
+@end
+
+@implementation NewCarListVC
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = [UIColor whiteColor];
+    self.title = @"车型选择";
+    self.automaticallyAdjustsScrollViewInsets = YES;
+    [self loadData];    
+
+
+}
+
+- (void)loadData
+{
+    NSString *summary = [NSString stringWithFormat:@"2.0.2%@",SECRET_KEY];
+    
+    NSString *url = [NSString stringWithFormat:@"%@/%@/%@",APP_URL(gaincarbrand),@"2.0.2",[summary MD5]];
+    
+    _sectionArray = [NSMutableArray array];
+    _rootDic = [NSMutableDictionary dictionary];
+    
+    [NetWorkEngine getRequestUse:(self) WithURL:url WithDic:nil needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        [_rootDic setDictionary:responseObject[@"data"]];
+        
+        if (_rootDic[@"hotBrands"]) {
+            NSArray *hotBrandsArr = _rootDic[@"hotBrands"];
+            [_rootDic removeObjectForKey:@"hotBrands"];
+            [_rootDic setObject:hotBrandsArr forKey:@"hot"];
+            
+        }
+        
+        NSArray *temArray = [[_rootDic allKeys] sortedArrayUsingSelector:@selector(compare:)];
+        
+        [_sectionArray addObjectsFromArray:temArray];
+        
+        [_sectionArray removeObject:[_sectionArray lastObject]];
+        
+        [_sectionArray insertObject:@"hot" atIndex:0];
+        
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self loadCollectionView];
+            
+        });
+        
+    } error:^(NSString *error) {
+        
+    } failure:^(NSString *fail) {
+        
+    }];
+    
+    
+    
+}
+- (void)loadCollectionView
+{
+    _flowLayout = [[FayCollectionViewHeadLayout alloc] init];
+    _flowLayout.sectionInset = UIEdgeInsetsMake(0, 14, 0, 14);
+    _flowLayout.minimumLineSpacing = 0;
+    _flowLayout.minimumInteritemSpacing = 0;
+
+    _collectionView = [[FayCollectionView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT-64)];
+    _collectionView.delegate = self;
+    [_collectionView.collectionView setCollectionViewLayout:_flowLayout];
+    _collectionView.collectionView.alwaysBounceVertical=YES;
+    [_collectionView.collectionView setIndicatorStyle:UIScrollViewIndicatorStyleWhite];
+    [_collectionView.collectionView setBackgroundColor:[UIColor whiteColor]];
+    [_collectionView.collectionView registerClass:[CarBraneCell class] forCellWithReuseIdentifier:KCellIdentifier];
+    [_collectionView.collectionView registerClass:[CarBraneReusableView class] forSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:KReusableViewIdentifier];
+    [self.view addSubview:_collectionView];
+
+   
+    [self.view addSubview:self.subCarDetailV];
+
+    
+}
+
+#pragma mark --FayCollectionViewDelegate
+- (NSArray *)sectionIndexTitlesForFayCollectionView:(FayCollectionView *)tableView
+{
+    return _sectionArray;
+}
+
+#pragma mark -- collectionDelegate/collectionViewDataSource
+-(CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout referenceSizeForHeaderInSection:(NSInteger)section
+{
+    CGSize size = {SCREEN_HEIGHT,26};
+    return size;
+}
+
+- (UICollectionReusableView *)collectionView:(UICollectionView *)collectionView viewForSupplementaryElementOfKind:(NSString *)kind atIndexPath:(NSIndexPath *)indexPath
+{
+    if (kind == UICollectionElementKindSectionHeader) {
+        CarBraneReusableView *reusableView = [collectionView dequeueReusableSupplementaryViewOfKind:UICollectionElementKindSectionHeader withReuseIdentifier:KReusableViewIdentifier forIndexPath:indexPath];
+        if (indexPath.section == 0) {
+            reusableView.type = CarBraneReusableViewHot;
+        }else
+        {
+            reusableView.type = CarBraneReusableViewNormal;
+        }
+        reusableView.titleName = [_sectionArray objectAtIndex:indexPath.section];
+        return reusableView;
+    }
+    
+    return nil;
+    
+}
+
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView
+{
+    return [_sectionArray count];
+    
+}
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section
+{
+    NSArray *temArray = _rootDic[[_sectionArray objectAtIndex:section]];
+    return temArray.count;
+
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    CarBraneCell *cell = [collectionView dequeueReusableCellWithReuseIdentifier:KCellIdentifier forIndexPath:indexPath];
+    if (indexPath.section == 0) {
+        cell.type = CarBraneCellTypeHot;
+        if (indexPath.row>4) {
+            cell.needLine = NO;
+        }else
+        {
+            cell.needLine = YES;
+        }
+    }else
+    {
+        cell.type = CarBraneCellTypeNormal;
+        cell.needLine = NO;
+    }
+
+    NSArray *temArray = _rootDic[[_sectionArray objectAtIndex:indexPath.section]];
+    NSDictionary *dataDic = temArray[indexPath.row];
+    cell.dataDic = dataDic;
+    return cell;
+    
+   
+    
+}
+- (CGSize)collectionView:(UICollectionView *)collectionView layout:(UICollectionViewLayout *)collectionViewLayout sizeForItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.section == 0) {
+        
+        
+        return CGSizeMake((SCREEN_WIDTH - 28)/ 5, 72);
+        
+    }else
+    {
+        return CGSizeMake(SCREEN_WIDTH - 28, 50);
+    }
+}
+
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    NSArray *temArray = _rootDic[[_sectionArray objectAtIndex:indexPath.section]];
+    NSDictionary *dataDic = temArray[indexPath.row];
+    
+    [self.view bringSubviewToFront:_clearBackView];
+    [self.view bringSubviewToFront:_mbView];
+    NSDictionary *dic = [NSDictionary dictionaryWithObjectsAndKeys:dataDic[@"brandName"],@"carBrand",@"2.0.2",@"version", nil];
+    
+    [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(gaincartrade) WithDic:dic needEncryption:YES needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        NSArray *dataArray = responseObject[@"data"];
+        if (dataArray.count>0) {
+            [_subCarDetailV animationShow];
+            
+            _subCarDetailV.dataDic = dataDic;
+            _subCarDetailV.dataArray = dataArray;
+        }else
+        {
+            NSDictionary *carType = [NSDictionary dictionaryWithObjectsAndKeys:dataDic[@"brandName"],@"carBrand", nil];
+            
+            [self backAddCarVCWithDic:carType];
+        }
+
+        
+    } error:^(NSString *error) {
+        
+    } failure:^(NSString *fail) {
+        
+    }];
+}
+
+#pragma mark -- lazy subCarDetailV
+- (SubCarDetailView *)subCarDetailV
+{
+    if (!_subCarDetailV) {
+        _subCarDetailV = [[SubCarDetailView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT-64)];
+    }
+    _subCarDetailV.hidden = YES;
+    __weak typeof(self)ws = self;
+    _subCarDetailV.NextVC = ^(SubCarDetailView *subView,NSString *tradeName,NSString *carSeries,NSDictionary *dataDic){
+        
+        [ws getCarYearAnd:subView tradeName:tradeName carSeries:carSeries dataDic:dataDic];
+        
+    };
+    
+    
+    return _subCarDetailV;
+    
+}
+
+#pragma mark --- 获取车辆的排量  年产
+- (void)getCarYearAnd:(SubCarDetailView *)subView tradeName:(NSString *)tradeName carSeries:(NSString *)carSeries dataDic:(NSDictionary *)oldDataDic
+{
+    
+    
+    NSDictionary *dic = [NSDictionary dictionaryWithObjectsAndKeys:oldDataDic[@"brandName"],@"carBrand",tradeName,@"tradeName",carSeries,@"carSeries",@"2.0.2",@"Version", nil];
+    
+    [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(gaincardisplacement) WithDic:dic needEncryption:YES needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        NSMutableArray *dataArray = [NSMutableArray array];
+        
+        NSArray *temArray = responseObject[@"data"];
+        for (NSDictionary *dic in temArray) {
+            if (![UtilTool isBlankString:dic[@"displacementShow"]]) {
+                [dataArray addObject:dic];
+            }
+        }
+        
+        if (dataArray.count > 0 ) {
+            CapacityVC *capacityVC = [[CapacityVC alloc] init];
+            capacityVC.carSeries = carSeries;
+            capacityVC.tradeName = tradeName;
+            capacityVC.dataDic = oldDataDic;
+            capacityVC.dataArray = dataArray;
+            [self.rt_navigationController pushViewController:capacityVC animated:YES];
+        }else
+        {
+            NSDictionary *carType = [NSDictionary dictionaryWithObjectsAndKeys:tradeName,@"tradeName",oldDataDic[@"brandName"],@"carBrand",carSeries,@"carSeries", nil];
+            [self backAddCarVCWithDic:carType];
+        }
+        
+
+        
+    } error:^(NSString *error) {
+        
+    } failure:^(NSString *fail) {
+        
+    }];
+    
+    
+}
+
+#pragma mark -- 返回添加界面
+- (void)backAddCarVCWithDic:(NSDictionary *)carType
+{
+    for (UIViewController *temp in self.rt_navigationController.viewControllers) {
+        
+        if ([[temp valueForKey:@"contentViewController"] isKindOfClass:[AddCarInfoViewController class]])
+        {
+            NSNotification *nition = [NSNotification notificationWithName:KUSER_CHOOSE_CARTYPE object:nil userInfo:carType];
+            [[NSNotificationCenter defaultCenter] postNotification:nition];
+            [self.rt_navigationController popToViewController:[temp valueForKey:@"contentViewController"] animated:YES];
+            
+        }
+    }
+
+}
+
+- (void)backVC
+{
+    [self.rt_navigationController popViewControllerAnimated:YES];
+}
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+}
+
+
+@end

@@ -1,0 +1,155 @@
+//
+//  SearchBarView.m
+//  P-SHARE
+//
+//  Created by fay on 16/9/5.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "SearchBarView.h"
+#import "MapSearchModel.h"
+#import <AMapSearchKit/AMapSearchKit.h>
+
+@interface SearchBarView()<AMapSearchDelegate,UITextFieldDelegate>
+{
+    AMapSearchAPI *_search;
+    AMapInputTipsSearchRequest *_tipsRequest;
+    UITextField *_textField;
+    NSMutableArray  *_searchArray;
+}
+@end
+@implementation SearchBarView
+
+- (instancetype)initWithFrame:(CGRect)frame
+{
+    if (self == [super initWithFrame:frame]) {
+        [self loadMapSearch];
+        _searchArray = [NSMutableArray array];
+        self.layer.cornerRadius = 4;
+        self.layer.masksToBounds = YES;
+        [self setUpSubView];
+        [[NSNotificationCenter defaultCenter]addObserver:self
+                                                selector:@selector(textFiledEditChanged:)
+                                                    name:UITextFieldTextDidChangeNotification
+                                                  object:nil];
+    }
+    return self;
+}
+- (void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+- (void)setUpSubView
+{
+    self.backgroundColor = [UIColor colorWithHexString:@"3ab19b"];
+    UIImageView *searchImageView = [UIImageView new];
+    searchImageView.image = [UIImage imageNamed:@"searchWhite_v2"];;
+    [self addSubview:searchImageView];
+    [searchImageView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.top.bottom.mas_equalTo(0);
+        make.width.mas_equalTo(searchImageView.mas_height);
+    }];
+    
+    UITextField *textField = [[UITextField alloc] init];
+    _textField = textField;
+    textField.delegate = self;
+    textField.returnKeyType = UIReturnKeyDone;
+    textField.textColor = [UIColor whiteColor];
+    textField.placeholder = @"请输入停车场名称";
+    textField.font = [UIFont systemFontOfSize:14];
+    textField.borderStyle = UITextBorderStyleNone;
+    [self addSubview:textField];
+    [textField mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(searchImageView.mas_right).offset(10);
+        make.right.mas_equalTo(0);
+        make.bottom.top.mas_equalTo(0);
+    }];
+}
+
+- (void)loadMapSearch
+{
+    //初始化检索对象
+    _search = [[AMapSearchAPI alloc] init];
+    _search.delegate = self;
+    
+    //构造AMapInputTipsSearchRequest对象，设置请求参数
+    _tipsRequest = [[AMapInputTipsSearchRequest alloc] init];
+    _tipsRequest.city = @"上海";
+}
+
+//实现输入提示的回调函数
+-(void)onInputTipsSearchDone:(AMapInputTipsSearchRequest*)request response:(AMapInputTipsSearchResponse *)response
+{
+    if(response.tips.count == 0)
+    {
+        return;
+    }
+   
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        //通过AMapInputTipsSearchResponse对象处理搜索结果
+        [_searchArray removeAllObjects];
+        for (AMapTip *p in response.tips) {
+            MapSearchModel *model = [[MapSearchModel alloc] init];
+            model.searchTitle = p.name;
+            model.searchLatitude = [NSString stringWithFormat:@"%f",p.location.latitude];
+            model.searchLongitude = [NSString stringWithFormat:@"%f",p.location.longitude];
+            model.searchDistrict = p.district;
+            model.isCollection = NO;
+            [_searchArray addObject:model];
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (self.searchResultBlock) {
+                self.searchResultBlock(self,_searchArray);
+            }
+        });
+    });
+    
+}
+
+
+
+#pragma mark -- textField delegate
+- (BOOL)textFieldShouldBeginEditing:(UITextField *)textField
+{
+    MyLog(@"textFieldShouldBeginEditing");
+    if (self.searchResultBlock) {
+        [_searchArray removeAllObjects];
+        self.searchResultBlock(self,_searchArray);
+    }
+    return YES;
+}
+- (BOOL)textFieldShouldReturn:(UITextField *)textField
+{
+    [textField resignFirstResponder];
+    return YES;
+}
+- (void)textFiledEditChanged:(NSNotification *)notification
+{
+    if ([notification.object isKindOfClass:[UITextField class]])
+    {
+        UITextField *textField = notification.object;
+        if (textField == _textField) {
+            UITextRange *selectedRange = [textField markedTextRange];
+            //获取高亮部分
+            UITextPosition *position = [textField positionFromPosition:selectedRange.start offset:0];
+            if (!position) {
+                _tipsRequest.keywords = textField.text;
+                //发起输入提示搜索
+                [_search AMapInputTipsSearch: _tipsRequest];
+            }
+        }
+    }
+}
+
+- (void)endEdit
+{
+    _textField.text = @"";
+    [_textField resignFirstResponder];
+}
+- (void)beginEdit
+{
+    [_textField becomeFirstResponder];
+
+}
+@end

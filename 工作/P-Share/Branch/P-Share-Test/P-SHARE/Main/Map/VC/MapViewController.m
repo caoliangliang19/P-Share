@@ -1,0 +1,543 @@
+//
+//  MapViewController.m
+//  P-SHARE
+//
+//  Created by fay on 16/8/30.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "MapViewController.h"
+#import "MapView.h"
+#import "MapSearchView.h"
+#import "BreakNetWorkAlertV.h"
+#import "RightButtonView.h"
+#import "MapBottomViews.h"
+#import "LoginVC.h"
+#import "MapSearchViewController.h"
+#import "CollectionView.h"
+#import "CarListVC.h"
+#import "UserCenterController.h"
+#import "ParkingListVC.h"
+#import "ADView.h"
+#import "JPUSHService.h"
+#import "TimeLineVC.h"
+@interface MapViewController ()
+{
+    UILabel             *_carNameL;//纪录选中车牌号码
+    MapBottomViews      *_mapBottomViews;
+    UIView              *_buleView;
+    IQKeyboardManager   *_keyboardManager;
+    UIImageView         *_guideImageView;
+    UIWindow            *_window;
+    UIButton            *_nilBtn;
+    
+}
+@property (nonatomic,strong) MapView             *mapView;
+@property (nonatomic,strong) GroupManage         *manage;
+@property (nonatomic,strong) BreakNetWorkAlertV  *notificationView;
+@property (nonatomic,strong) RightButtonView     *rightButtonView;
+@property (nonatomic,strong) MapSearchView       *mapSearchView;
+
+
+
+@end
+
+@implementation MapViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [MobClick profileSignInWithPUID:[UtilTool getCustomId]];
+
+    _keyboardManager = [IQKeyboardManager sharedManager];
+    [JPUSHService setTags:[NSSet setWithObject:@"customer"] alias:[UtilTool getCustomId] callbackSelector:@selector(tagsAliasCallback:tags:alias:) object:self];
+
+}
+#pragma mark -- 极光推送回调方法
+-(void)tagsAliasCallback:(int)iResCode tags:(NSSet*)tags alias:(NSString*)alias
+{
+    MyLog(@"rescode: %d, \ntags: %@, \nalias: %@\n", iResCode, tags , alias);
+}
+
+- (void)setup
+{
+    [super setup];
+    
+    _manage = [GroupManage shareGroupManages];
+    
+    MyLog(@"%@",_manage.user);
+    
+    [self monitorUserChooseParking];
+    [self loadMapView];
+    [self loadMapSearchView];
+    [self loadRightBtnView];
+    [self loadMapBottomViews];
+    [self loadLocationButton];
+    [self netWorkStatus];
+    [self loadADView];
+    [self setLeadPage];
+    
+}
+#pragma mark -- 首页推广
+- (void)loadADView
+{
+    NSString *summary = [[NSString stringWithFormat:@"%@%@",@"1.3.7",SECRET_KEY] MD5];
+    NSString *url = [NSString stringWithFormat:@"%@/%@/%@",APP_URL(adverList),@"1.3.7",summary];
+    
+    
+    [NetWorkEngine getRequestUse:(self) WithURL:url WithDic:nil needAlert:NO showHud:NO success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        SDWebImageManager *manage = [SDWebImageManager sharedManager];
+        UIImage *image = [manage.imageCache imageFromDiskCacheForKey:responseObject[@"refuelCard"][@"imagePath"]];
+        if (image) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                ADView *adView = [[ADView alloc] init];
+                adView.image = image;
+                adView.ImageTapBlock = ^(){
+                    WebInfoModel *webModel      = [WebInfoModel new];
+                    webModel.urlType            = URLTypeNet;
+                    webModel.shareType          = WebInfoModelTypeShare;
+                    webModel.title              = responseObject[@"refuelCard"][@"name"];
+                    webModel.url                = responseObject[@"refuelCard"][@"imageLink"];
+                    webModel.imagePath          = responseObject[@"refuelCard"][@"imagePath"];
+                    webModel.descibute          = @"";
+                    WebViewController *webView  = [[WebViewController alloc] init];
+                    webView.webModel            = webModel;
+                    [self.rt_navigationController pushViewController:webView animated:YES];
+                };
+              
+            });
+            
+        }else
+        {
+            __weak typeof(manage)weakManage = manage;
+            [manage downloadImageWithURL:[NSURL URLWithString:responseObject[@"refuelCard"][@"imagePath"]] options:0 progress:^(NSInteger receivedSize, NSInteger expectedSize) {
+                
+            } completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, BOOL finished, NSURL *imageURL) {
+                [weakManage.imageCache storeImage:image forKey:responseObject[@"refuelCard"][@"imagePath"] toDisk:YES];
+            }];
+            
+        }
+
+        
+    } error:^(NSString *error) {
+        
+    } failure:^(NSString *fail) {
+        
+    }];
+    
+}
+#pragma mark -- KVO监控用户选择的停车场
+- (void)monitorUserChooseParking
+{
+    [_manage addObserver:self forKeyPath:KUSER_CHOOSE_PARKING options:NSKeyValueObservingOptionNew context:nil];
+    [_manage addObserver:self forKeyPath:NETWORK_STATUS options:NSKeyValueObservingOptionNew|NSKeyValueObservingOptionOld context:nil];
+    [_manage addObserver:self forKeyPath:KUSER_CHOOSE_CAR options:NSKeyValueObservingOptionNew context:nil];
+    [_manage addObserver:self forKeyPath:KUSER_HOMEPARK options:NSKeyValueObservingOptionNew context:nil];
+
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(refreshAllData) name:LOGIN_SUCCESS object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(delegateAllData) name:LOGOUT_SUCCESS object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(goToTimeLine:) name:@"goToTimeLine" object:nil];
+
+}
+#pragma mark --
+- (void)goToTimeLine:(NSNotification *)notifi
+{
+    TimeLineVC *timeLineVC = notifi.object;
+    [self.rt_navigationController pushViewController:timeLineVC animated:YES];
+    
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
+{
+    if ([keyPath isEqualToString:KUSER_CHOOSE_PARKING]) {
+        MyLog(@"用户选择车场发生变化");
+        
+        if(_manage.parking){
+            _mapSearchView.title = _manage.parking.parkingName;
+        }else
+        {
+            _mapSearchView.title = @"口袋停";
+        }
+        
+        
+    }else if ([keyPath isEqualToString:NETWORK_STATUS]){
+       
+        MyLog(@"%u",_manage.networkStatus);
+        
+        MyLog(@"%@ %@",[change objectForKey:@"new"],[change objectForKey:@"old"]);
+        NSInteger oldStatus = [[change objectForKey:@"old"] integerValue];
+
+        
+        if (_manage.networkStatus == NetworkStatusWifi || _manage.networkStatus == NetworkStatusWWAN) {
+            
+            if (oldStatus == NetworkStatusNotReachable) {
+                [self refreshAllData];
+            }
+            
+            self.notificationView.hidden = YES;
+            [_rightButtonView mas_remakeConstraints:^(MASConstraintMaker *make) {
+                make.top.mas_equalTo(_mapSearchView.mas_bottom).offset(14);
+                make.right.mas_equalTo(-14);
+                make.width.mas_equalTo(38);
+            }];
+        }
+        else
+        {
+            self.notificationView.hidden = NO;
+            [_rightButtonView mas_remakeConstraints:^(MASConstraintMaker *make) {
+                make.top.mas_equalTo(self.notificationView.mas_bottom).offset(14);
+                make.right.mas_equalTo(-14);
+                make.width.mas_equalTo(38);
+            }];
+
+        }
+
+        
+    }else if ([keyPath isEqualToString:KUSER_CHOOSE_CAR]){
+        
+        MyLog(@"用户车辆发生变化");
+        [self reloadOrderWithCar];
+        
+    }else if ([keyPath isEqualToString:KUSER_HOMEPARK]) {
+        [self.mapView addAnnotationWithCooordinate];
+    }
+    else {
+        
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
+}
+
+#pragma mark -- 用户退出登录，清除所有数据
+- (void)delegateAllData
+{
+    _manage.user = nil;
+    _manage.homeParking = nil;
+    _manage.car = nil;
+    _manage.order = nil;
+    [self refreshAllData];
+}
+
+#pragma mark -- 当用户登录或者重新联网时，重新刷新数据
+- (void)refreshAllData
+{
+    MyLog(@"%@",[[NSUserDefaults standardUserDefaults] objectForKey:KHEADIMG_URL]);
+    [_mapSearchView.headBtn sd_setBackgroundImageWithURL:[NSURL URLWithString:[[NSUserDefaults standardUserDefaults] objectForKey:KHEADIMG_URL]] forState:(UIControlStateNormal) placeholderImage:[UIImage imageNamed:@"head_v2"]];
+    
+    [_mapView refreshMapData];
+    [_rightButtonView refreshDefaultCar];
+    
+}
+
+#pragma mark -- 刷新关于车辆的数据
+- (void)reloadOrderWithCar
+{
+    _rightButtonView.car = _manage.car;
+    [_mapBottomViews refreshBottomViewsData];
+    
+}
+- (void)loadLocationButton
+{
+    UIButton *locationBtn = [UIButton new];
+    [locationBtn setImage:[UIImage imageNamed:@"navigation_v2"] forState:(UIControlStateNormal)];
+    [locationBtn addTarget:self action:@selector(getUserLocation) forControlEvents:(UIControlEventTouchUpInside)];
+    [self.view addSubview:locationBtn];
+    [locationBtn mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.mas_equalTo(self.view).offset(8);
+        make.size.mas_equalTo(CGSizeMake(38, 38));
+        make.bottom.mas_equalTo(_mapBottomViews.mas_top).offset(0);
+    }];
+
+}
+#pragma mark -- 定位
+- (void)getUserLocation
+{
+    MyLog(@"点击定位");
+    [_mapView location];
+    
+}
+- (void)loadMapBottomViews
+{
+    if (!_mapBottomViews) {
+        _mapBottomViews = [MapBottomViews new];
+    }
+    [self.view addSubview:_mapBottomViews];
+    [_mapBottomViews mas_makeConstraints:^(MASConstraintMaker *make) {
+        
+        make.left.right.mas_equalTo(0);
+        make.bottom.mas_equalTo(-49);
+    }];
+}
+- (void)loadMapView
+{
+    MapView *mapView = [[MapView alloc] init];
+    _mapView = mapView;
+    [self.view addSubview:mapView];
+    [mapView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.edges.mas_equalTo(UIEdgeInsetsZero);
+    }];
+}
+- (void)loadMapSearchView
+{
+    if (!_mapSearchView) {
+        MapSearchView *mapSearchView = [MapSearchView new];
+        _mapSearchView = mapSearchView;
+        [_mapSearchView.headBtn sd_setBackgroundImageWithURL:[NSURL URLWithString:[[NSUserDefaults standardUserDefaults] objectForKey:KHEADIMG_URL]] forState:(UIControlStateNormal) placeholderImage:[UIImage imageNamed:@"head_v2"]];
+        [self.view addSubview:mapSearchView];
+        [mapSearchView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.left.mas_equalTo(self.view).offset(6);
+            make.right.mas_equalTo(self.view).offset(-6);
+            make.top.mas_equalTo(self.view).offset(22);
+            make.height.mas_equalTo(42);
+        }];
+    
+        WS(ws)
+        mapSearchView.gotoSearchVC = ^(){
+            [MobClick event:@"SearchID"];
+            MapSearchViewController *mapSearchVC = [[MapSearchViewController alloc] init];
+            mapSearchVC.searchVCBlock = ^(MapSearchModel *model){
+                [ws.mapView locationWithLatitude:model.searchLatitude Longitude:model.searchLongitude];
+            };
+            [self.rt_navigationController pushViewController:mapSearchVC animated:YES complete:nil];
+        };
+        
+//        前往个人中心
+        mapSearchView.goToUserCenter = ^(){
+            [ws goUserCenterVC];
+            [MobClick event:@"SelfCentreID"];
+        };
+        
+    }
+    _mapSearchView.title = @"恒积大厦";
+}
+- (BreakNetWorkAlertV*)notificationView
+{
+    if (!_notificationView) {
+        _notificationView = [BreakNetWorkAlertV new];
+        _notificationView.hidden = YES;
+        [self.view addSubview:_notificationView];
+        [_notificationView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.top.mas_equalTo(_mapSearchView.mas_bottom).offset(10);
+            make.right.mas_equalTo(-8);
+            make.left.mas_equalTo(8);
+            make.height.mas_equalTo(22);
+        }];
+    }
+    WS(ws)
+    _notificationView.removeNotificationViewBlock = ^(BreakNetWorkAlertV *notifiView){
+        notifiView.hidden = YES;
+        [ws.rightButtonView mas_remakeConstraints:^(MASConstraintMaker *make) {
+            make.top.mas_equalTo(ws.mapSearchView.mas_bottom).offset(14);
+            make.right.mas_equalTo(-14);
+            make.width.mas_equalTo(38);
+        }];
+
+        
+    };
+    return _notificationView;
+}
+
+- (void)loadRightBtnView
+{
+    if (!_rightButtonView) {
+        _rightButtonView = [RightButtonView new];
+        [self.view addSubview:_rightButtonView];
+    }
+    [_rightButtonView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.mas_equalTo(_mapSearchView.mas_bottom).offset(14);
+        make.right.mas_equalTo(-14);
+        make.width.mas_equalTo(38);
+    }];
+    
+    WS(ws)
+    _rightButtonView.rightButtonViewBlock = ^(NSInteger tag){
+//        1:车辆 2:定位家 3:收藏车场
+        
+        
+        if (tag == 1 || tag == 3) {
+            [ws isNotVisitorDo:^{
+                if (tag == 1) {
+                    [MobClick event:@"CarManagerID"];
+                    CarListVC *carListVC = [[CarListVC alloc] init];
+                    [ws.rt_navigationController pushViewController:carListVC animated:YES complete:nil];
+                    
+                }else
+                {
+                    [MobClick event:@"CollectListID"];
+                    CollectionView *collectionV = [CollectionView new];
+                    collectionV.CollectionViewBlock = ^(MapSearchModel *model){
+                        [ws.mapView locationWithLatitude:model.searchLatitude Longitude:model.searchLongitude];
+                    };
+                }
+            }];
+            
+        }else if (tag == 2){
+            Parking *homeParking = ws.manage.homeParking;
+            if (homeParking) {
+                [MobClick event:@"LocationFamilyID"];
+                [ws.mapView locationWithLatitude:homeParking.parkingLatitude Longitude:homeParking.parkingLongitude];
+            }else
+            {
+                ParkingListVC *parkListVC = [[ParkingListVC alloc] init];
+                parkListVC.style = ParkingListVCStyleAllParking;
+                [ws.rt_navigationController pushViewController:parkListVC animated:YES complete:nil];
+            }
+        }
+        
+    };
+    
+}
+
+#pragma mark -- 前往个人忠心界面
+- (void)goUserCenterVC
+{
+    [self isNotVisitorDo:^{
+        UserCenterController *userCenterVC = [[UserCenterController alloc] init];
+        [self.rt_navigationController pushViewController:userCenterVC animated:YES complete:nil];
+    }];
+}
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleDefault;
+    
+    [[NSNotificationCenter defaultCenter] postNotificationName:MapVC_WillAppear object:nil];
+    
+    self.isHiddenNavigationBar = YES;
+    _keyboardManager.shouldResignOnTouchOutside = YES;
+    _keyboardManager.enableAutoToolbar = NO;
+
+}
+- (void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+    [UIApplication sharedApplication].statusBarStyle = UIStatusBarStyleLightContent;
+    _keyboardManager.shouldResignOnTouchOutside = YES;
+    _keyboardManager.enableAutoToolbar = YES;
+    self.isHiddenNavigationBar = NO;
+}
+
+
+- (void)netWorkStatus
+{
+    //1.创建网络监测者
+    AFNetworkReachabilityManager *manager = [AFNetworkReachabilityManager sharedManager];
+    [manager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+        //这里是监测到网络改变的block  可以写成switch方便
+        //在里面可以随便写事件
+        
+        switch (status) {
+            case AFNetworkReachabilityStatusUnknown:
+                MyLog(@"未知网络状态");
+                self.manage.networkStatus = NetworkStatusUnKnow;
+                break;
+            case AFNetworkReachabilityStatusNotReachable:
+                MyLog(@"无网络");
+                self.manage.networkStatus = NetworkStatusNotReachable;
+                break;
+                
+            case AFNetworkReachabilityStatusReachableViaWWAN:
+                MyLog(@"蜂窝数据网");
+                self.manage.networkStatus = NetworkStatusWWAN;
+                break;
+                
+            case AFNetworkReachabilityStatusReachableViaWiFi:
+                MyLog(@"WiFi网络");
+                self.manage.networkStatus = NetworkStatusWifi;
+
+                break;
+                
+            default:
+                break;
+        }
+        
+    }] ;
+    [manager startMonitoring];
+    
+}
+
+
+#pragma mark -- 判断是否是游客  如果是游客  进行某些操作 提示其先登录
+- (void)isNotVisitorDo:(void (^)())doSomething
+{
+    if (_manage.isVisitor) {
+        MyLog(@"是游客");
+        
+        [UtilTool creatAlertController:self title:@"提示" describute:@"使用该功能需要登录帐号,是否去登录?" sureClick:^{
+            LoginVC *login = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"LoginVC"];
+           
+            [self.rt_navigationController pushViewController:login animated:YES complete:nil];
+        } cancelClick:^{
+            
+        }];
+        
+    }else
+    {
+        MyLog(@"不是游客");
+
+        if (doSomething) {
+            doSomething();
+        }
+    }
+}
+- (void)setLeadPage{
+    NSFileManager *manager=[NSFileManager defaultManager];
+    //判断 我是否创建了文件，如果没创建 就创建这个文件
+    NSString *path = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES)[0];
+    if (![manager fileExistsAtPath:[path stringByAppendingPathComponent:@"b.txt"]]){
+        
+        _guideImageView = [[UIImageView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)];
+        
+        _guideImageView.image = [UIImage imageNamed:@"p1"];
+        _window = [UIApplication sharedApplication].keyWindow;
+        
+        [_window addSubview:_guideImageView];
+        
+        _nilBtn = [UtilTool createBtnFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT) title:nil bgImageName:nil target:self action:@selector(cancelGuideImage)];
+        
+        [_window addSubview:_nilBtn];
+        
+        //第一次运行后创建文件，以后就不再运行
+        [manager createFileAtPath:[path stringByAppendingPathComponent:@"b.txt"] contents:nil attributes:nil];
+    }
+}
+- (void)cancelGuideImage
+{
+    static NSInteger i = 0;
+    i++;
+    if (i==1) {
+        _guideImageView.image = [UIImage imageNamed:@"p2"];
+    }else if (i == 2){
+        _guideImageView.image = [UIImage imageNamed:@"p3"];
+    }else if (i == 3){
+        _guideImageView.image = [UIImage imageNamed:@"p4"];
+    }else if (i == 4){
+        _guideImageView.image = [UIImage imageNamed:@"p5"];
+    }else if (i == 5){
+        _guideImageView.image = [UIImage imageNamed:@"p6"];
+    }else if (i == 6){
+        _guideImageView.image = [UIImage imageNamed:@"p7"];
+    }else{
+        _guideImageView.hidden = YES;
+        _guideImageView = nil;
+        [_window removeFromSuperview];
+        _nilBtn.hidden = YES;
+        _nilBtn = nil;
+    }
+}
+- (void)dealloc
+{
+    [_manage removeObserver:self forKeyPath:NETWORK_STATUS];
+    [_manage removeObserver:self forKeyPath:KUSER_CHOOSE_PARKING];
+    [_manage removeObserver:self forKeyPath:KUSER_CHOOSE_CAR];
+    [_manage removeObserver:self forKeyPath:KUSER_HOMEPARK];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+
+}
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+
+@end

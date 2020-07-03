@@ -1,0 +1,34 @@
+//
+//  OrderController.h
+//  P-SHARE
+//
+//  Created by 亮亮 on 16/9/13.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "BaseViewController.h"
+
+typedef  NS_ENUM(NSInteger , CLLOrderDetailController){
+    CLLOrderDetailControllerShare         = 1,
+    CLLOrderDetailControllerYuZu,
+    CLLOrderDetailControllerLinT,
+    CLLOrderDetailControllerDaiBo
+};
+
+
+@interface OrderController : BaseViewController
+{
+    UITableView *_orderTableView;
+    NSArray *_shareSecArray;
+    OrderModel *_model;
+    
+}
+@property (nonatomic,strong)OrderModel *orderModel;
+@property (nonatomic,copy)NSArray *rendArray;
+@property (nonatomic,copy)NSArray *shareArray;
+@property (nonatomic,copy)NSArray *orderArray;
+@property (nonatomic,strong)NSMutableArray *requestArray;
+@property (nonatomic,assign) CLLOrderDetailController type;
+
+
+@end

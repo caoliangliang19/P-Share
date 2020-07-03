@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9531" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9529"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" id="KGk-i7-Jjw" customClass="AddOilCardCell">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="40"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="375" height="39.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="加油卡类型" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="alz-4E-UJ9">
+                        <rect key="frame" x="7" y="10" width="100" height="20"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="100" id="2X6-4W-BP1"/>
+                            <constraint firstAttribute="height" constant="20" id="uQI-ZE-YCY"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                        <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                        <nil key="highlightedColor"/>
+                    </label>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="dropdown" translatesAutoresizingMaskIntoConstraints="NO" id="eHp-Bv-VbY">
+                        <rect key="frame" x="347" y="15" width="15" height="10"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="15" id="DLt-Xm-Jes"/>
+                            <constraint firstAttribute="height" constant="10" id="u5Y-j7-JCS"/>
+                        </constraints>
+                    </imageView>
+                    <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" textAlignment="right" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="iEd-B8-K2w">
+                        <rect key="frame" x="143" y="4" width="192" height="31"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="192" id="HWX-er-fzM"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                        <textInputTraits key="textInputTraits"/>
+                    </textField>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="8hY-MR-itk">
+                        <rect key="frame" x="0.0" y="40" width="375" height="1"/>
+                        <color key="backgroundColor" red="0.92505129419999998" green="0.92505129419999998" blue="0.92505129419999998" alpha="1" colorSpace="calibratedRGB"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="1" id="yWp-NN-crj"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <color key="backgroundColor" red="0.9882352941176471" green="0.9882352941176471" blue="0.9882352941176471" alpha="1" colorSpace="calibratedRGB"/>
+                <constraints>
+                    <constraint firstAttribute="trailing" secondItem="iEd-B8-K2w" secondAttribute="trailing" constant="40" id="FM1-jS-ZKs"/>
+                    <constraint firstItem="8hY-MR-itk" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" id="HbG-kf-dIf"/>
+                    <constraint firstAttribute="trailing" secondItem="eHp-Bv-VbY" secondAttribute="trailing" constant="13" id="HsK-tV-LuI"/>
+                    <constraint firstItem="eHp-Bv-VbY" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="15" id="MJQ-Lt-iAN"/>
+                    <constraint firstAttribute="bottom" secondItem="iEd-B8-K2w" secondAttribute="bottom" constant="4" id="NPs-Jt-KFU"/>
+                    <constraint firstItem="iEd-B8-K2w" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="4" id="UaM-7M-Lym"/>
+                    <constraint firstItem="alz-4E-UJ9" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" constant="10" id="hIa-KA-daj"/>
+                    <constraint firstItem="8hY-MR-itk" firstAttribute="top" secondItem="iEd-B8-K2w" secondAttribute="bottom" constant="5" id="oqq-8X-nT6"/>
+                    <constraint firstItem="alz-4E-UJ9" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" constant="7" id="tnY-j1-DAs"/>
+                    <constraint firstAttribute="trailing" secondItem="8hY-MR-itk" secondAttribute="trailing" id="wVc-sA-cJg"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="rightImageView" destination="eHp-Bv-VbY" id="hGb-Cx-Y3x"/>
+                <outlet property="rightLable" destination="alz-4E-UJ9" id="xbV-Fx-ayr"/>
+                <outlet property="rightTextField" destination="iEd-B8-K2w" id="0ze-ZU-ZDb"/>
+                <outlet property="rightWidth" destination="FM1-jS-ZKs" id="CMi-6I-mCq"/>
+            </connections>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="dropdown" width="17" height="10"/>
+    </resources>
+</document>

@@ -1,0 +1,35 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "acc79f6d-110f-4c95-a1c3-91b85286f091++5399",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+    "acc79f6d-110f-4c95-a1c3-91b85286f091++5399" : {
+
+    },
+    "acc79f6d-110f-4c95-a1c3-91b85286f091++5940" : {
+
+    }
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "acc79f6d-110f-4c95-a1c3-91b85286f091++5399" : 0,
+    "acc79f6d-110f-4c95-a1c3-91b85286f091++5940" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "E9723CA1-FF1F-4F15-92A1-4B92A16CB5EA",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "acc79f6d-110f-4c95-a1c3-91b85286f091++5399" : "P-Share(v2.0.5)\/",
+    "acc79f6d-110f-4c95-a1c3-91b85286f091++5940" : "P-Share(v2.0.2)\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "P-Share",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "P-Share.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "svn:\/\/liangliang.cao@192.168.1.160:9999\/repos",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Subversion",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "acc79f6d-110f-4c95-a1c3-91b85286f091++5399"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "svn:\/\/liangliang.cao@192.168.1.160:9999\/repos",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Subversion",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "acc79f6d-110f-4c95-a1c3-91b85286f091++5940"
+    }
+  ]
+}

@@ -1,0 +1,271 @@
+//
+//  CarLifeVC.m
+//  P-SHARE
+//
+//  Created by fay on 16/10/12.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "CarLifeVC.h"
+#import "CarLifeView.h"
+#import "SelectParkController.h"
+#import "DiscountActController.h"
+#import "UseCarFeelController.h"
+#import "WebViewController.h"
+#import "CarLiftModel.h"
+#import "WeChatController.h"
+@interface CarLifeVC ()<selectParkingDelegate>
+{
+    UIAlertView *_alert;
+}
+@property (nonatomic,strong)CarLifeView *carLifeView;
+@property (nonatomic,strong)NewCarModel *carModel;
+@property (weak, nonatomic) IBOutlet UILabel *titleL;
+
+
+@end
+
+@implementation CarLifeVC
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    [self loadCarLifeView];
+    HomeArray *aHomeArray;
+    if (!aHomeArray) {
+        aHomeArray = [HomeArray shareHomeArray];
+    }
+    NSUserDefaults *userDefault = [NSUserDefaults standardUserDefaults];
+    if (![MyUtil isBlankString:[userDefault objectForKey:KCarLiftModelID]]) {
+        ParkingModel *aModel = [[ParkingModel alloc] init];
+        aModel.parkingId = [userDefault objectForKey:KCarLiftModelID];
+        aModel.parkingName = [userDefault objectForKey:KCarLiftModelName];
+        [DataSource shareInstance].model = aModel;
+        self.carLifeView.parkModel = aModel;
+        
+    }else
+    {
+        ParkingModel *homeModel = aHomeArray.dataArray[0];
+        if ([MyUtil isBlankString:homeModel.parkingId]) {
+            //            没有设置家停车场
+            [DataSource shareInstance].model = homeModel;
+            self.carLifeView.parkModel = homeModel;
+            
+        }else
+        {
+            ParkingModel *temModel = [DataSource shareInstance].model;
+            if ([MyUtil isBlankString:temModel.parkingId]) {
+                //                单例model为空
+                [DataSource shareInstance].model = homeModel;
+                self.carLifeView.parkModel = homeModel;
+                
+            }else
+            {
+                self.carLifeView.parkModel = temModel;
+            }
+        }
+        
+        
+    }
+    self.carModel = [DataSource shareInstance].carModel;
+    [ [DataSource shareInstance] addObserver:self forKeyPath:@"carModel" options:NSKeyValueObservingOptionNew context:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(userExit) name:KUserExit object:nil];
+
+
+}
+
+- (void)dealloc
+{
+    [[DataSource shareInstance] removeObserver:self forKeyPath:@"carModel"];
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    
+}
+- (void)userExit
+{
+    
+}
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary<NSString *,id> *)change context:(void *)context
+{
+    if ([keyPath isEqualToString:@"carModel"]) {
+        self.carModel =[DataSource shareInstance].carModel;
+        
+    }
+}
+- (void)setCarModel:(NewCarModel *)carModel
+{
+    self.carLifeView.carModel = carModel;
+}
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    [self.carLifeView.collectionView setContentOffset:CGPointMake(0, 0)];
+
+    if ([MyUtil getCustomId].length <= 0)
+    {
+        [DataSource shareInstance].carModel = nil;
+//        self.navigationItem.title = @"爱车生活";
+        
+    }
+    self.navigationController.navigationBarHidden = YES;
+
+}
+- (void)loadCarLifeView
+{
+    if (!_carLifeView) {
+        _carLifeView = [CarLifeView instaceCarLifeView];
+        [self.view addSubview:_carLifeView];
+        [_carLifeView mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.left.right.mas_equalTo(0);
+            make.top.mas_equalTo(64);
+            make.height.mas_equalTo(SCREEN_HEIGHT-64-49);
+        }];
+        
+    }
+        
+    
+    __weak typeof(self)ws = self;
+    //    前往微信社群
+    _carLifeView.weChatAssociateBlock = ^(CarLifeView *carLiftView)
+    {
+        if ([MyUtil isBlankString:carLiftView.parkModel.parkingId]) {
+            [ws alertShouldAddCarLiftPark];
+            
+            return ;
+        }
+        
+        [ws getMapViewWeChat2Dbarcode:carLiftView.parkModel];
+        
+    };
+    
+    __weak typeof (self)weakself = self;
+   
+    _carLifeView.carLifeBlock = ^(NSInteger index,NSMutableArray *array,ParkingModel *model){
+        
+        
+        if (index == 0) {
+            DiscountActController *select = [[DiscountActController alloc]init];
+            select.model = model;
+            [weakself.navigationController pushViewController:select animated:YES];
+        }else if (index == 1){
+            UseCarFeelController *select = [[UseCarFeelController alloc]init];
+            select.model = model;
+            [weakself.navigationController pushViewController:select animated:YES];
+        }
+    };
+    
+    _carLifeView.showActivityDetail = ^(CarLiftModel *model )
+    {
+        
+        WebViewController *webVC = [[WebViewController alloc] init];
+        webVC.type = WebViewControllerTypeNeedShare;
+        webVC.titleStr = model.title;
+        webVC.url = model.url;
+        webVC.imagePath = model.imagePath;
+        [weakself.navigationController pushViewController:webVC animated:YES];
+    };
+    
+    _carLifeView.carMasterBlock = ^(CarLifeView *carLiftView)
+    {
+        QYSessionViewController *sessionVC = [[QYSDK sharedSDK] sessionViewController];
+        sessionVC.sessionTitle = @"口袋停客服";
+        
+        sessionVC.groupId = [[DataSource shareInstance].qiyuId intValue];
+        
+        QYCustomUIConfig *custom = [[QYSDK sharedSDK] customUIConfig];
+        NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+        NSString *imageString = [userDefaults objectForKey:customer_head];
+        UIImageView *temImgV = [[UIImageView alloc] init];
+        [temImgV sd_setImageWithURL:[NSURL URLWithString:imageString] placeholderImage:[UIImage imageNamed:@"defaultHeaderImage"]];
+        custom.customerHeadImage = temImgV.image;
+        custom.serviceHeadImage = [UIImage imageNamed:@"logoPshare"];
+        [weakself.navigationController.navigationBar setTitleTextAttributes:@{NSForegroundColorAttributeName:[UIColor whiteColor]}];
+        sessionVC.navigationItem.hidesBackButton = YES;
+        custom.rightBarButtonItemColorBlackOrWhite = NO;
+        UIButton*btn = [UIButton buttonWithType:UIButtonTypeCustom];
+        btn.frame=CGRectMake(5, 34, 35, 40);
+        [btn setImage:[UIImage imageNamed:@"defaultBack"] forState:UIControlStateNormal];
+        [btn addTarget:weakself action:@selector(goBackAction)forControlEvents:UIControlEventTouchUpInside];
+        UIBarButtonItem *back=[[UIBarButtonItem alloc]initWithCustomView:btn];[btn setImageEdgeInsets:UIEdgeInsetsMake(10, 0, 10, 20)];sessionVC.navigationItem.leftBarButtonItem=back;
+        QYUserInfo *user = [[QYUserInfo alloc] init];
+        user.userId = [MyUtil getCustomId];
+        [[QYSDK sharedSDK] setUserInfo:user];
+        [weakself.navigationController pushViewController:sessionVC animated:YES];
+        weakself.navigationController.navigationBarHidden = NO;
+    };
+    
+}
+- (void)ChatVC
+{
+    
+    CHATBTNCLICK
+    
+}
+- (void)goBackAction
+{
+    [self.navigationController popViewControllerAnimated:YES];
+    
+}
+- (void)alertShouldAddCarLiftPark
+{
+    UIAlertController *alert = [MyUtil alertController:@"请先选择车场" Completion:^{
+        
+        SelectParkController *select = [[SelectParkController alloc]init];
+        select.delegate = self;
+        [self.navigationController pushViewController:select animated:YES];
+        
+    } Fail:^{
+        
+    }];
+    
+    [self presentViewController:alert animated:YES completion:nil];
+    
+}
+- (void)getMapViewWeChat2Dbarcode:(ParkingModel *)model
+{
+    
+    [_carLifeView hubShow];
+    NSMutableDictionary *mutableDic = [NSMutableDictionary dictionaryWithObjectsAndKeys:model.parkingId,@"parkingId",@"2.0.2",@"version", nil];
+    [RequestModel requestPostInvoiceInfoWithURL:getCarlovQRCode WithDic:mutableDic Completion:^(NSDictionary *dic) {
+        [_carLifeView hubHiden];
+        
+        if([dic[@"errorNum"] isEqualToString:@"0"]) {
+            
+            WeChatController *weChatView = [[WeChatController alloc] init];
+            [self.navigationController pushViewController:weChatView animated:YES];
+            
+        }else{
+            ALERT_VIEW(dic[@"errorInfo"]);
+            _alert = nil;
+        }
+        
+    } Fail:^(NSString *errror) {
+        
+        ALERT_VIEW(errror);
+        _alert = nil;
+        [_carLifeView hubHiden];
+    }];
+}
+- (void)refreshParking{
+    if (_carLifeView) {
+        _carLifeView.parkModel = [DataSource shareInstance].model;
+    }
+    
+    
+}
+- (IBAction)gotoChangeParking {
+    
+    SelectParkController *select = [[SelectParkController alloc]init];
+    select.delegate = self;
+    [self.navigationController pushViewController:select animated:YES];
+
+}
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+
+
+@end

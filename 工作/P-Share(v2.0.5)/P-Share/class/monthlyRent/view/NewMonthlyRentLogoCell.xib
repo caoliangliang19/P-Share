@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="9532" systemVersion="15A284" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9530"/>
+        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" rowHeight="207" id="KGk-i7-Jjw" customClass="NewMonthlyRentLogoCell">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="207"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="375" height="206"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="logoPshare" translatesAutoresizingMaskIntoConstraints="NO" id="NDe-CG-NgH">
+                        <rect key="frame" x="146" y="28" width="82" height="82"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="82" id="50h-3r-0kH"/>
+                            <constraint firstAttribute="height" constant="82" id="Toz-za-oaD"/>
+                        </constraints>
+                    </imageView>
+                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="合作授权代收企业" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2h9-LT-ymp">
+                        <rect key="frame" x="8" y="120" width="160" height="20"/>
+                        <constraints>
+                            <constraint firstAttribute="width" constant="160" id="DZI-Qg-qn0"/>
+                            <constraint firstAttribute="height" constant="20" id="oHb-Pv-HDS"/>
+                        </constraints>
+                        <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                        <color key="textColor" red="0.41176470588235292" green="0.41176470588235292" blue="0.41176470588235292" alpha="1" colorSpace="calibratedRGB"/>
+                        <color key="highlightedColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
+                    </label>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="lT9-3T-PuT">
+                        <rect key="frame" x="32" y="150" width="60" height="42"/>
+                        <constraints>
+                            <constraint firstAttribute="width" secondItem="lT9-3T-PuT" secondAttribute="height" multiplier="46:32" id="oKC-ul-Ypm"/>
+                        </constraints>
+                    </imageView>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="XWU-0i-ga5">
+                        <rect key="frame" x="116" y="150" width="60" height="42"/>
+                        <constraints>
+                            <constraint firstAttribute="width" secondItem="XWU-0i-ga5" secondAttribute="height" multiplier="46:32" id="xWs-Eh-rfB"/>
+                        </constraints>
+                    </imageView>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="R9L-TR-20A">
+                        <rect key="frame" x="199" y="150" width="60" height="42"/>
+                        <constraints>
+                            <constraint firstAttribute="width" secondItem="R9L-TR-20A" secondAttribute="height" multiplier="46:32" id="pUK-zM-EwQ"/>
+                        </constraints>
+                    </imageView>
+                    <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="Exb-Nb-Ala">
+                        <rect key="frame" x="283" y="150" width="60" height="42"/>
+                        <constraints>
+                            <constraint firstAttribute="width" secondItem="Exb-Nb-Ala" secondAttribute="height" multiplier="46:32" id="Lja-c5-QJc"/>
+                        </constraints>
+                    </imageView>
+                    <view alpha="0.80000000000000004" contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Qph-uM-COV" userLabel="line">
+                        <rect key="frame" x="8" y="204" width="359" height="1"/>
+                        <color key="backgroundColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="height" constant="1" id="pOe-ah-5Hc"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <color key="backgroundColor" red="0.91764705882352937" green="0.91764705882352937" blue="0.91764705882352937" alpha="1" colorSpace="calibratedRGB"/>
+                <constraints>
+                    <constraint firstItem="NDe-CG-NgH" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="topMargin" constant="20" id="4NI-BO-Ib2"/>
+                    <constraint firstItem="XWU-0i-ga5" firstAttribute="width" secondItem="lT9-3T-PuT" secondAttribute="width" id="5jx-1m-9SS"/>
+                    <constraint firstItem="2h9-LT-ymp" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leadingMargin" id="8lD-FP-a43"/>
+                    <constraint firstItem="lT9-3T-PuT" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leadingMargin" constant="24" id="ABl-dB-8o2"/>
+                    <constraint firstItem="XWU-0i-ga5" firstAttribute="leading" secondItem="lT9-3T-PuT" secondAttribute="trailing" constant="24" id="FHg-T2-XyU"/>
+                    <constraint firstItem="NDe-CG-NgH" firstAttribute="centerX" secondItem="H2p-sc-9uM" secondAttribute="centerX" id="Fpz-Pg-GMF"/>
+                    <constraint firstItem="Exb-Nb-Ala" firstAttribute="leading" secondItem="R9L-TR-20A" secondAttribute="trailing" constant="24" id="L3c-Ky-IS2"/>
+                    <constraint firstItem="XWU-0i-ga5" firstAttribute="height" secondItem="lT9-3T-PuT" secondAttribute="height" id="QYR-fO-63M"/>
+                    <constraint firstItem="Qph-uM-COV" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leadingMargin" id="TDC-k9-bmq"/>
+                    <constraint firstAttribute="trailingMargin" secondItem="Exb-Nb-Ala" secondAttribute="trailing" constant="24" id="Tb4-OC-7f4"/>
+                    <constraint firstItem="Exb-Nb-Ala" firstAttribute="centerY" secondItem="lT9-3T-PuT" secondAttribute="centerY" id="UlY-0U-czi"/>
+                    <constraint firstItem="R9L-TR-20A" firstAttribute="height" secondItem="lT9-3T-PuT" secondAttribute="height" id="Wvg-1u-gbr"/>
+                    <constraint firstItem="R9L-TR-20A" firstAttribute="centerY" secondItem="lT9-3T-PuT" secondAttribute="centerY" id="XTR-3I-82z"/>
+                    <constraint firstItem="Exb-Nb-Ala" firstAttribute="height" secondItem="lT9-3T-PuT" secondAttribute="height" id="YZb-ow-EyA"/>
+                    <constraint firstItem="R9L-TR-20A" firstAttribute="width" secondItem="lT9-3T-PuT" secondAttribute="width" id="dCj-X4-Whv"/>
+                    <constraint firstAttribute="bottomMargin" secondItem="Qph-uM-COV" secondAttribute="bottom" constant="-6" id="eAl-BX-uCW"/>
+                    <constraint firstItem="R9L-TR-20A" firstAttribute="leading" secondItem="XWU-0i-ga5" secondAttribute="trailing" constant="24" id="eX3-a8-Jho"/>
+                    <constraint firstItem="lT9-3T-PuT" firstAttribute="top" secondItem="2h9-LT-ymp" secondAttribute="bottom" constant="10" id="mbv-fc-9da"/>
+                    <constraint firstItem="2h9-LT-ymp" firstAttribute="top" secondItem="NDe-CG-NgH" secondAttribute="bottom" constant="10" id="nGy-6u-XGD"/>
+                    <constraint firstItem="Exb-Nb-Ala" firstAttribute="width" secondItem="lT9-3T-PuT" secondAttribute="width" id="qwk-vC-yWJ"/>
+                    <constraint firstAttribute="trailingMargin" secondItem="Qph-uM-COV" secondAttribute="trailing" id="sJa-q7-exC"/>
+                    <constraint firstItem="XWU-0i-ga5" firstAttribute="centerY" secondItem="lT9-3T-PuT" secondAttribute="centerY" id="tOP-oT-Npz"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="logo0" destination="lT9-3T-PuT" id="sHc-0C-VV5"/>
+                <outlet property="logo1" destination="XWU-0i-ga5" id="KGd-0A-S4d"/>
+                <outlet property="logo2" destination="R9L-TR-20A" id="Zf3-AK-2hd"/>
+                <outlet property="logo3" destination="Exb-Nb-Ala" id="cxx-bS-mVB"/>
+            </connections>
+            <point key="canvasLocation" x="182.5" y="152.5"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="logoPshare" width="117" height="117"/>
+    </resources>
+</document>

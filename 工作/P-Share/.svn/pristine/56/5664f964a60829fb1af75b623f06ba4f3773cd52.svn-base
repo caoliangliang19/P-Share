@@ -1,0 +1,520 @@
+//
+//  MapSearchView.m
+//  P-SHARE
+//
+//  Created by fay on 16/9/5.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "MapSearchViewController.h"
+#import "SearchBarView.h"
+#import "MapSearchModel.h"
+#import "SearchCell.h"
+#import "SearchModel+CoreDataProperties.h"
+#import "ParkingListVC.h"
+
+typedef enum {
+    MapSearchViewControllerStyleCollection,//展示收藏
+    MapSearchViewControllerStyleSearch//展示搜索
+}MapSearchViewControllerStyle;
+@interface MapSearchViewController ()<UITableViewDelegate,UITableViewDataSource>
+{
+
+    NSManagedObjectContext *_moc;
+
+    SearchBarView   *_searchBarView;
+
+    //    历史记录数组
+    NSMutableArray  *_historySearchArray;
+
+    
+    UIButton        *_setHomeButton;
+    IQKeyboardManager *_keyboardManager;
+}
+@property (nonatomic,assign)MapSearchViewControllerStyle style;
+@property (nonatomic,strong)UITableView                 *tableView;
+//    搜索数组
+@property (nonatomic,strong)NSMutableArray              *searchArray;
+//    收藏数组
+@property (nonatomic,strong)NSMutableArray              *collectionArray;
+
+@end
+
+@implementation MapSearchViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    _moc = [CoreDataManage createMOC];
+    _style = MapSearchViewControllerStyleCollection;
+    _keyboardManager = [IQKeyboardManager sharedManager];
+    _collectionArray = [NSMutableArray array];
+    _historySearchArray = [NSMutableArray array];
+    _searchArray = [NSMutableArray array];
+
+    [self createHeadView];
+    [self loadTableView];
+    if(![GroupManage shareGroupManages].isVisitor){
+        [self getFavoriteParking];
+    }
+    [self getHistoryParking];
+}
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    _keyboardManager.shouldResignOnTouchOutside = NO;
+    _keyboardManager.enableAutoToolbar = NO;
+
+}
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    _keyboardManager.shouldResignOnTouchOutside = YES;
+    _keyboardManager.enableAutoToolbar = YES;
+
+}
+
+- (void)createHeadView
+{
+
+    WS(ws);
+    SearchBarView *searchBarView = [[SearchBarView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH-100, 26)];
+    _searchBarView = searchBarView;
+    /**
+     让searchArray里面的数据和collectionArray里面的数据通过searchTitle对比，判断是否是收藏过
+     */
+    searchBarView.searchResultBlock = ^(SearchBarView *searchBarView,NSArray *searchResultArray){
+        ws.style = MapSearchViewControllerStyleSearch;
+        [ws.searchArray removeAllObjects];
+        [ws.searchArray addObjectsFromArray:searchResultArray];
+        dispatch_async(dispatch_get_global_queue(0, 0), ^{
+            [ws.searchArray enumerateObjectsUsingBlock:^(MapSearchModel *model, NSUInteger idx, BOOL * _Nonnull stop) {
+                MyLog(@"NSThread -->%@",[NSThread currentThread]);
+                [ws.collectionArray enumerateObjectsUsingBlock:^(MapSearchModel *temModel, NSUInteger idx, BOOL * _Nonnull stop) {
+                    if ([temModel.searchTitle isEqualToString:model.searchTitle]) {
+                        model.isCollection = YES;
+                    }
+                }];
+            }];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                [ws.tableView reloadData];
+            });
+
+        });
+    };
+    
+    
+    self.navigationItem.titleView = searchBarView;
+    UIBarButtonItem *rightItem = [[UIBarButtonItem alloc] initWithTitle:@"取消" style:UIBarButtonItemStylePlain target:self action:@selector(cancelSearch)];
+    self.navigationItem.rightBarButtonItem = rightItem;
+    
+    UIButton *setHomeButton = [UIButton new];
+    _setHomeButton = setHomeButton;
+    if ([GroupManage shareGroupManages].homeParking) {
+        [setHomeButton setTitle:[GroupManage shareGroupManages].homeParking.parkingName forState:(UIControlStateNormal)];
+    }else{
+        [setHomeButton setTitle:@"设置家的地址" forState:(UIControlStateNormal)];
+
+    }
+    setHomeButton.titleLabel.font = [UIFont systemFontOfSize:15];
+    [setHomeButton setImage:[UIImage imageNamed:@"searchHome_v2"] forState:(UIControlStateNormal)];
+    [setHomeButton addTarget:self action:@selector(setHomeParkingClick) forControlEvents:(UIControlEventTouchUpInside)];
+    [setHomeButton setTitleColor:[UIColor lightGrayColor] forState:(UIControlStateNormal)];
+    [setHomeButton layoutButtonWithEdgeInsetsStyle:ButtonEdgeInsetsStyleImageLeft imageTitlespace:10];
+    [self.view addSubview:setHomeButton];
+    [setHomeButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.right.left.mas_equalTo(0);
+        make.top.mas_equalTo(0);
+        make.height.mas_equalTo(40);
+    }];
+    
+    UIView *lineView = [UIView new];
+    lineView.backgroundColor = KLINE_COLOR;
+    [self.view addSubview:lineView];
+    [lineView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.right.left.mas_equalTo(0);
+        make.height.mas_equalTo(1);
+        make.top.mas_equalTo(setHomeButton.mas_bottom);
+    }];
+}
+- (void)loadTableView
+{
+    UITableView *tableView = [[UITableView alloc] initWithFrame:CGRectZero style:(UITableViewStylePlain)];
+    _tableView = tableView;
+    tableView.delegate = self;
+    tableView.dataSource = self;
+    tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    [tableView registerNib:[UINib nibWithNibName:@"SearchCell" bundle:nil] forCellReuseIdentifier:@"SearchCell"];
+    [self.view addSubview:tableView];
+    [tableView mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.right.bottom.mas_equalTo(0);
+        make.top.mas_equalTo(_setHomeButton.mas_bottom).offset(1);
+    }];
+}
+
+#pragma mark --- 结束搜索
+- (void)cancelSearch
+{
+    [_searchBarView endEdit];
+    _style = MapSearchViewControllerStyleCollection;
+    [_tableView reloadData];
+}
+
+#pragma mark -- tableView delegate && dataSource
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    if (_style == MapSearchViewControllerStyleCollection) {
+        return 2;
+    }
+    return 1;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section
+{
+    if (section == 1 && _historySearchArray.count > 0) {
+        return 30;
+    }
+    return 0.1;
+}
+
+- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    if (section == 1 && _historySearchArray.count >0) {
+        return 30;
+    }
+    return 0.1;
+}
+- (UIView *)tableView:(UITableView *)tableView viewForHeaderInSection:(NSInteger)section
+{
+    if (section == 1 && _historySearchArray.count >0) {
+        UIView *headView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 30)];
+        headView.backgroundColor = [UIColor clearColor];
+        UILabel *label = [[UILabel alloc] initWithFrame:CGRectMake(14, 0, 100, 30)];
+        label.text = @"历史记录";
+        label.font = [UIFont systemFontOfSize:14];
+        label.textColor = [UIColor lightGrayColor];
+        [headView addSubview:label];
+        return headView;
+    }
+    return nil;
+}
+- (UIView *)tableView:(UITableView *)tableView viewForFooterInSection:(NSInteger)section
+{
+    if (section == 1 &&_historySearchArray.count >0) {
+        UIView *footView = [[UIView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, 30)];
+        footView.userInteractionEnabled = YES;
+        footView.backgroundColor = [UIColor clearColor];
+        UIButton *btn = [UIButton new];
+        btn.frame = footView.frame;
+        [btn setTitleColor:[UIColor lightGrayColor] forState:(UIControlStateNormal)];
+        [btn setTitle:@"清除历史记录" forState:(UIControlStateNormal)];
+        btn.titleLabel.font = [UIFont systemFontOfSize:14];
+        [btn addTarget:self action:@selector(delegateHistory) forControlEvents:(UIControlEventTouchUpInside)];
+        [footView addSubview:btn];
+        
+        return footView;
+    }
+    return nil;
+}
+
+
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if (_style == MapSearchViewControllerStyleCollection) {
+        if (section == 0) {
+            return _collectionArray.count;
+        }
+        return _historySearchArray.count;
+    }
+    return _searchArray.count;
+}
+
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    SearchCell *cell = [tableView dequeueReusableCellWithIdentifier:@"SearchCell"];
+    MapSearchModel *model;
+    if (_style == MapSearchViewControllerStyleCollection) {
+        if (indexPath.section == 0) {
+            model = _collectionArray[indexPath.row];
+        }else
+        {
+            model = _historySearchArray[indexPath.row];
+        }
+    }else
+    {
+        model = _searchArray[indexPath.row];
+    }
+   
+    cell.model = model;
+    
+    
+    WS(ws)
+    cell.block = ^(SearchCell *searchCell){
+        [ws operateSearchResult:searchCell.model];
+    };
+    
+    return cell;
+    
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    SearchCell *cell = (SearchCell *)[tableView cellForRowAtIndexPath:indexPath];
+    
+    if (self.searchVCBlock) {
+        self.searchVCBlock(cell.model);
+    }
+    [self insertManageWith:cell.model];
+    [self.rt_navigationController popViewControllerAnimated:YES];
+}
+
+
+#pragma mark -- 前往车辆列表界面
+- (void)setHomeParkingClick
+{
+    ParkingListVC *parkListVC = [[ParkingListVC alloc] init];
+    parkListVC.style = ParkingListVCStyleAllParking;
+    [self.rt_navigationController pushViewController:parkListVC animated:YES complete:nil];
+}
+#pragma mark -- 设置收藏／取消收藏
+- (void)operateSearchResult:(MapSearchModel *)model
+{
+    if (model.isCollection) {
+//        取消收藏
+        NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithObjectsAndKeys:[UtilTool getCustomId],@"customerId",model.searchTitle,@"addressName",@"2.0.0",@"version",nil];
+        [self operatePostData:APP_URL(deleteCollection) dictionry:dic mapSearchModel:model type:NO];
+        
+      
+    }else
+    {
+        if ([UtilTool isBlankString:[UtilTool getCustomId]]) {
+            [UtilTool creatAlertController:self title:@"提示" describute:@"使用该功能需要登录帐号,是否去登录?" sureClick:^{
+                LoginVC *login = [[UIStoryboard storyboardWithName:@"Main" bundle:nil] instantiateViewControllerWithIdentifier:@"LoginVC"];
+                
+                [self.rt_navigationController pushViewController:login animated:YES complete:nil];
+            } cancelClick:^{
+                
+            }];
+            return;
+        }
+//        收藏
+        NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithObjectsAndKeys:[UtilTool getCustomId],@"customerId",model.searchTitle,@"addressName",model.searchDistrict,@"address",model.searchLatitude,@"latitude",model.searchLongitude,@"longitude",@"2.0.0",@"version",nil];
+        [self operatePostData:APP_URL(saveCollection) dictionry:dic mapSearchModel:model type:YES];
+
+    }
+}
+- (void)operatePostData:(NSString *)urlStr dictionry:(NSDictionary *)dic mapSearchModel:(MapSearchModel *)model type:(BOOL)isCollection
+{
+    [NetWorkEngine postRequestUse:(self) WithURL:urlStr WithDic:dic needEncryption:YES needAlert:YES showHud:YES  success:^(NSURLSessionDataTask *task, id responseObject) {
+        MyLog(@"%@",responseObject);
+        
+        if (isCollection) {
+            model.isCollection = YES;
+        }else
+        {
+            
+            model.isCollection = NO;
+            [self updateManageWith:model];
+            
+        }
+        [self analysisSearchResultWith:responseObject[@"collectionList"]];
+        
+    } error:^(NSString *error) {
+        MyLog(@"%@",error);
+        
+    } failure:^(NSString *fail) {
+        MyLog(@"%@",fail);
+        
+    }];
+}
+#pragma mark -- 解析数据
+- (void)analysisSearchResultWith:(NSArray *)dataArray
+{
+    dispatch_async(dispatch_get_global_queue(0, 0), ^{
+        [_collectionArray removeAllObjects];
+        for (NSDictionary *dic in dataArray) {
+            MapSearchModel *model = [MapSearchModel shareObjectWithDic:dic];
+            model.isCollection = YES;
+            [_collectionArray addObject:model];
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [_tableView reloadData];
+        });
+        
+    });
+}
+
+#pragma mark -- 获取收藏停车场
+- (void)getFavoriteParking{
+    NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithObjectsAndKeys:[UtilTool getCustomId],@"customerId",@"2.0.0",@"version",nil];
+    [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(queryCollection) WithDic:dic needEncryption:YES needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        MyLog(@"%@",responseObject);
+        WS(ws)
+        [ws analysisSearchResultWith:responseObject[@"collectionList"]];
+        
+    } error:^(NSString *error) {
+        MyLog(@"%@",error);
+
+    } failure:^(NSString *fail) {
+        MyLog(@"%@",fail);
+
+    }];
+    
+}
+
+#pragma mark -- 获取搜索历史记录
+- (void)getHistoryParking
+{
+    //    建立获取数据的对象 并指明操作实体为Employee
+    NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"SearchModel"];
+    //    执行获取操作 获取所有Employee托管对象
+    NSError *error = nil;
+    NSArray <SearchModel *>*searchModels = [_moc executeFetchRequest:request error:&error];
+    [_historySearchArray removeAllObjects];
+    [searchModels enumerateObjectsUsingBlock:^(SearchModel * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        
+        MapSearchModel *model = [[MapSearchModel alloc] init];
+        model.customerId = obj.customerId;
+        model.searchTitle = obj.searchTitle;
+        model.searchLongitude = obj.searchLongitude;
+        model.searchLatitude = obj.searchLatitude;
+        model.isCollection = obj.isCollection;
+        model.searchDistrict = obj.searchDistrict;
+        [_historySearchArray addObject:model];
+        MyLog(@"%@",obj);
+    }];
+
+    if (_style == MapSearchViewControllerStyleCollection) {
+        NSIndexSet *indexSet = [[NSIndexSet alloc] initWithIndex:1];
+        [_tableView reloadSections:indexSet withRowAnimation:(UITableViewRowAnimationFade)];
+    }
+  
+}
+#pragma mark -- 插入操作
+- (void)insertManageWith:(MapSearchModel *)model
+{
+    if ([self getResultCount:model] != 0) {
+        return;
+    }
+    
+    //    创建托管对象 并指明所创建的托管对象所属的实体明
+    SearchModel *tem = [NSEntityDescription insertNewObjectForEntityForName:@"SearchModel" inManagedObjectContext:_moc];
+    tem.customerId = model.customerId;
+    tem.searchTitle = model.searchTitle;
+    tem.searchLongitude = model.searchLongitude;
+    tem.searchLatitude = model.searchLatitude;
+    tem.isCollection = model.isCollection;
+    tem.searchDistrict = model.searchDistrict;
+
+    
+    //    通过上下文保存对象 并在保存前判断是否修改
+    NSError *error = nil;
+    if (_moc.hasChanges) {
+        [_moc save:&error];
+    }
+    
+    //    错误处理
+    if (error) {
+        MyLog(@"CoreData Insert Data Error : %@",error);
+    }
+    
+}
+#pragma mark -- 删除操作
+- (void)delegateHistory
+{
+    //    建立获取数据请求对象 指明对Employee实体进行删除操锁
+    NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"SearchModel"];
+    
+    //    执行操作前找到要删除的对象
+    NSError *error = nil;
+    NSArray<SearchModel *> *employees = [_moc executeFetchRequest:request error:&error];
+    
+    //    遍历符合删除要求的对象数组 执行删除操作
+    [employees enumerateObjectsUsingBlock:^(SearchModel * _Nonnull obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        [_moc deleteObject:obj];
+    }];
+    
+    //    保存上下文
+    if (_moc.hasChanges) {
+        [_moc save:nil];
+    }
+    
+    //    错误处理
+    if (error) {
+        MyLog(@"CoreData delete Data Error : %@",error);
+        
+    }
+    [self getHistoryParking];
+    
+}
+#pragma mark --修改操作
+- (void)updateManageWith:(MapSearchModel *)model
+{
+    //    建立获取数据的请求对象 并指明操作的实体为Employee
+    NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"SearchModel"];
+    //    创建谓词 设置过滤条件
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"searchTitle = %@",model.searchTitle];
+    request.predicate = predicate;
+    //    执行获取请求 获取符合条件的托管对象
+    NSError *error = nil;
+    NSArray<SearchModel *> *searchModels = [_moc executeFetchRequest:request error:&error];
+    [searchModels enumerateObjectsUsingBlock:^(SearchModel *obj, NSUInteger idx, BOOL * _Nonnull stop) {
+        obj.isCollection = NO;
+
+    }];
+    
+    //    保存上下文
+    if (_moc.hasChanges) {
+        [_moc save:nil];
+    }
+    
+    //    错误处理
+    if (error) {
+        MyLog(@"CoreData Updata Data Error : %@",error);
+    }
+    
+    [self getHistoryParking];
+    
+}
+
+
+#pragma mark -- 判断插入数据是否存在
+- (NSInteger)getResultCount:(MapSearchModel *)model
+{
+    NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"SearchModel"];;
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"searchTitle = %@",model.searchTitle];
+    request.predicate = predicate;
+    
+    //    使用MOC的countForFetchRequest:error:方法 获取请求的count（NSUInteger）
+    NSError *error = nil;
+    NSUInteger count = [_moc countForFetchRequest:request error:&error];
+    
+    MyLog(@"fetch request result Employee.count %ld",count);
+    
+    if (error) {
+        MyLog(@"fetch request result Error:%@",error);
+    }
+    return count;
+
+}
+
+
+
+
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

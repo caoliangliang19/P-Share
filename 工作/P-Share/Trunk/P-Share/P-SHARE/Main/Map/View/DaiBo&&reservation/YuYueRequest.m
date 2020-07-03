@@ -1,0 +1,189 @@
+//
+//  YuYueRequest.m
+//  P-SHARE
+//
+//  Created by fay on 16/10/19.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "YuYueRequest.h"
+@implementation YuYueRequest
+
+
+#pragma mark -- 刷新预约停车数据 resultNum:0 ->有预约订单  resultNum：1-> 无月租订单
++ (void)reloadYuYueTingChe:(Parking *)model Completion:(void (^)(int resultNum,OrderModel *model))completion {
+    
+    Car *carModel = [GroupManage shareGroupManages].car;
+    NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"1.3.7",@"version",[UtilTool getCustomId],@"customerId",carModel.carNumber,@"carNumber",model.parkingId,@"parkingId",@"0",@"voucherStatus",@"1",@"pageIndex", nil];
+    [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(queryVoucherPage) WithDic:dic needEncryption:YES needAlert:NO showHud:NO success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        OrderModel *yuZuOrder = [OrderModel shareObjectWithDic:responseObject[@"carwashList"][0]];
+        if (completion) {
+            completion(0,yuZuOrder);
+        }
+        MyLog(@"%@",responseObject);
+        
+    } error:^(NSString *error) {
+        
+        if(completion){
+            completion(1,nil);
+        }
+        MyLog(@"%@",error);
+        
+    } failure:^(NSString *fail) {
+        if(completion){
+            completion(1,nil);
+        }
+        MyLog(@"%@",fail);
+        
+    }];
+    
+    
+}
+
+#pragma mark -- 刷新最新的代泊数据
++ (void)reloadDaiBoDataWithParkingModel:(Parking *)parkingModel completion:(void (^)(BOOL hasOrder,OrderModel *order,DaiBoInfoVStatus status,NSString *tenseTime))completion
+{
+    
+    NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithObjectsAndKeys:@"1.3.7",@"version",[UtilTool getCustomId],@"customerId",[GroupManage shareGroupManages].car.carNumber,@"carNumber",parkingModel.parkingId,@"parkingId", nil];
+    
+    [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(queryParkerById) WithDic:dic needEncryption:YES needAlert:NO showHud:NO  success:^(NSURLSessionDataTask *task, id responseObject) {
+        
+        NSArray *temDic = responseObject[@"parkerList"];
+        if (temDic.count > 0 && ![UtilTool isBlankString:[GroupManage shareGroupManages].car.carNumber]) {
+            //                此时有代泊订单
+            OrderModel *order = [OrderModel shareObjectWithDic:responseObject[@"parkerList"][0]];
+            
+            if (completion) {
+                completion(YES,order,1000,nil);
+            }
+        }else
+        {
+            //                查询此时代泊状态 正常or紧张
+            [YuYueRequest getBubbleInfoWith:parkingModel Completion:^(Parking *newParkModel) {
+                
+                [YuYueRequest requestDaiBoStatusWithParking:newParkModel complete:^(DaiBoInfoVStatus status,NSString *tenseTime) {
+                    if (completion) {
+                        completion(NO,nil,status,tenseTime);
+                    }
+                }];
+                
+            }];
+            
+        }
+        
+        MyLog(@"%@",responseObject);
+        
+    } error:^(NSString *error) {
+        //                查询此时代泊状态 正常or紧张
+        [YuYueRequest getBubbleInfoWith:parkingModel Completion:^(Parking *newParkModel) {
+            
+            [YuYueRequest requestDaiBoStatusWithParking:newParkModel complete:^(DaiBoInfoVStatus status,NSString *tenseTime) {
+                if (completion) {
+                    completion(NO,nil,status,tenseTime);
+                }
+            }];
+        }];
+        
+        
+        MyLog(@"%@",error);
+        
+    } failure:^(NSString *fail) {
+        //                查询此时代泊状态 正常or紧张
+        [YuYueRequest getBubbleInfoWith:parkingModel Completion:^(Parking *newParkModel) {
+            
+            [YuYueRequest requestDaiBoStatusWithParking:newParkModel complete:^(DaiBoInfoVStatus status,NSString *tenseTime) {
+                if (completion) {
+                    completion(NO,nil,status,tenseTime);
+                }
+            }];
+        }];
+        
+        MyLog(@"%@",fail);
+        
+    }];
+
+    
+}
+
+#pragma mark -- 查询代泊是否紧张
++ (void)requestDaiBoStatusWithParking:(Parking *)currentParking complete:(void (^)(DaiBoInfoVStatus status,NSString *tenseTime))completion
+{
+    
+    if ([currentParking.statusInfo isEqualToString:@"空"]) {
+        //        如果状态为空 则获取预计紧张时间
+        
+        NSMutableDictionary *dic = [NSMutableDictionary dictionaryWithObjectsAndKeys:currentParking.parkingId,@"parkingId",@"2.0.0",@"version", nil];
+        
+        [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(tenseTime) WithDic:dic needEncryption:YES needAlert:NO showHud:NO success:^(NSURLSessionDataTask *task, id responseObject) {
+            
+            MyLog(@"%@",responseObject);
+
+            if (completion) {
+                completion(DaiBoInfoVStatusHomeNervous,responseObject[@"data"]);
+            }
+        } error:^(NSString *error) {
+            MyLog(@"%@",error);
+            if (completion) {
+                completion(DaiBoInfoVStatusNervous,nil);
+            }
+            
+        } failure:^(NSString *fail) {
+            MyLog(@"%@",fail);
+            if (completion) {
+                completion(DaiBoInfoVStatusNervous,nil);
+            }
+            
+        }];
+        
+    }else
+    {
+        if (completion) {
+            completion(DaiBoInfoVStatusNervous,nil);
+        }
+    }
+}
+
+#pragma mark -- 获取气泡内容
++ (void)getBubbleInfoWith:(Parking *)parkModel Completion:(void (^)(Parking *newParkModel))completion
+{
+    
+    NSMutableDictionary *dict = [NSMutableDictionary dictionaryWithObjectsAndKeys:parkModel.parkingId,@"parkingId",@"2.0.0",@"version", nil];
+    [NetWorkEngine postRequestUse:(self) WithURL:APP_URL(getParkingStatus) WithDic:dict needEncryption:YES needAlert:NO showHud:NO success:^(NSURLSessionDataTask *task, id responseObject) {
+        MyLog(@"%@",responseObject);
+        
+        Parking *currentParking = [Parking shareObjectWithDic:responseObject[@"data"]];
+        currentParking.parkingId = parkModel.parkingId;
+        if (completion) {
+            completion(currentParking);
+        }
+    } error:^(NSString *error) {
+        MyLog(@"%@",error);
+        
+    } failure:^(NSString *fail) {
+        MyLog(@"%@",fail);
+    }];
+
+}
+
++ (void)cancelDaiBoOrderWithOrder:(OrderModel *)order                  success:(void (^)(NSDictionary *dataDic))success
+                            error:(void (^)(NSString *error))error
+                          failure:(void (^)(NSString *fail))failure;
+{
+    NSString *summery = [[NSString stringWithFormat:@"%@%@",order.orderId,SECRET_KEY] MD5];
+    NSString *url = [NSString stringWithFormat:@"%@/%@/%@",APP_URL(cancelOrder),order.orderId,summery];
+    [NetWorkEngine getRequestUse:(self) WithURL:url WithDic:nil needAlert:YES showHud:YES success:^(NSURLSessionDataTask *task, id responseObject) {
+        if (success) {
+            success(responseObject);
+        }
+        
+    } error:^(NSString *error) {
+        
+        
+    } failure:^(NSString *fail) {
+        
+    }];
+    
+}
+
+@end

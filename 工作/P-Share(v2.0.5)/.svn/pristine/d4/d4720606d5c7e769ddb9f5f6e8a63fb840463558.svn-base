@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15A284" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="AddOilCard">
+            <connections>
+                <outlet property="tableV" destination="vJn-7Y-7UN" id="Mg6-63-uwP"/>
+                <outlet property="view" destination="i5M-Pr-FkT" id="sKb-eV-av3"/>
+            </connections>
+        </placeholder>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <view clearsContextBeforeDrawing="NO" contentMode="scaleToFill" id="i5M-Pr-FkT">
+            <rect key="frame" x="0.0" y="0.0" width="375" height="667"/>
+            <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+            <subviews>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="e4H-Dl-x90">
+                    <rect key="frame" x="0.0" y="0.0" width="375" height="64"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="添加加油卡" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="M9Z-hc-4Wk">
+                            <rect key="frame" x="107" y="34" width="160" height="20"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="20" id="I2m-yn-7qz"/>
+                                <constraint firstAttribute="width" constant="160" id="mnD-Wp-m2d"/>
+                            </constraints>
+                            <fontDescription key="fontDescription" type="system" pointSize="19"/>
+                            <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="defaultBack" translatesAutoresizingMaskIntoConstraints="NO" id="neM-8X-RUg">
+                            <rect key="frame" x="15" y="34" width="15" height="20"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="20" id="6nm-5Y-2Mg"/>
+                                <constraint firstAttribute="width" constant="15" id="H5K-Ek-Gh3"/>
+                            </constraints>
+                        </imageView>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="f2g-BB-uJ2">
+                            <rect key="frame" x="0.0" y="20" width="60" height="44"/>
+                            <constraints>
+                                <constraint firstAttribute="height" constant="44" id="Aya-aa-166"/>
+                                <constraint firstAttribute="width" constant="60" id="e6F-Tn-HfT"/>
+                            </constraints>
+                            <state key="normal">
+                                <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                            </state>
+                            <connections>
+                                <action selector="backVC:" destination="-1" eventType="touchUpInside" id="raf-II-q7l"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" red="0.22352941179999999" green="0.83529411760000005" blue="0.72156862749999995" alpha="1" colorSpace="calibratedRGB"/>
+                    <constraints>
+                        <constraint firstItem="neM-8X-RUg" firstAttribute="leading" secondItem="e4H-Dl-x90" secondAttribute="leading" constant="15" id="5dx-Hc-dbc"/>
+                        <constraint firstAttribute="bottom" secondItem="neM-8X-RUg" secondAttribute="bottom" constant="10" id="8rX-5b-xUp"/>
+                        <constraint firstItem="M9Z-hc-4Wk" firstAttribute="top" secondItem="e4H-Dl-x90" secondAttribute="top" constant="34" id="OVc-im-JwI"/>
+                        <constraint firstItem="f2g-BB-uJ2" firstAttribute="leading" secondItem="e4H-Dl-x90" secondAttribute="leading" id="aBh-8L-RGx"/>
+                        <constraint firstAttribute="height" constant="64" id="nYj-IU-1rl"/>
+                        <constraint firstAttribute="bottom" secondItem="f2g-BB-uJ2" secondAttribute="bottom" id="v5n-Gc-OIG"/>
+                        <constraint firstItem="M9Z-hc-4Wk" firstAttribute="centerX" secondItem="e4H-Dl-x90" secondAttribute="centerX" id="vgu-QV-qll"/>
+                    </constraints>
+                </view>
+                <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Vgp-Ju-eBw">
+                    <rect key="frame" x="0.0" y="623" width="375" height="44"/>
+                    <subviews>
+                        <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="添加加油卡" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="R97-gy-HYj">
+                            <rect key="frame" x="163" y="11" width="85" height="21"/>
+                            <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                            <color key="textColor" red="0.9882352941176471" green="0.9882352941176471" blue="0.9882352941176471" alpha="1" colorSpace="calibratedRGB"/>
+                            <nil key="highlightedColor"/>
+                        </label>
+                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="plus_w" translatesAutoresizingMaskIntoConstraints="NO" id="UdT-fP-Qsy">
+                            <rect key="frame" x="127" y="14" width="15" height="15"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="15" id="EdD-rB-C0u"/>
+                                <constraint firstAttribute="height" constant="15" id="o6x-dh-p0q"/>
+                            </constraints>
+                        </imageView>
+                        <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="CMs-ZO-Rpi">
+                            <rect key="frame" x="72" y="8" width="230" height="30"/>
+                            <constraints>
+                                <constraint firstAttribute="width" constant="230" id="UcE-2C-WGn"/>
+                                <constraint firstAttribute="height" constant="30" id="fQe-dZ-10I"/>
+                            </constraints>
+                            <connections>
+                                <action selector="addOilCardClick:" destination="-1" eventType="touchUpInside" id="Sei-1r-YEG"/>
+                            </connections>
+                        </button>
+                    </subviews>
+                    <color key="backgroundColor" red="0.22352941179999999" green="0.83529411760000005" blue="0.72156862749999995" alpha="1" colorSpace="calibratedRGB"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="44" id="Fjm-ky-yUW"/>
+                        <constraint firstItem="R97-gy-HYj" firstAttribute="centerX" secondItem="Vgp-Ju-eBw" secondAttribute="centerX" constant="18" id="FpW-gj-rHk"/>
+                        <constraint firstItem="R97-gy-HYj" firstAttribute="leading" secondItem="UdT-fP-Qsy" secondAttribute="trailing" constant="21" id="SEe-yz-Hb8"/>
+                        <constraint firstItem="UdT-fP-Qsy" firstAttribute="centerY" secondItem="Vgp-Ju-eBw" secondAttribute="centerY" id="Z1h-aD-Wyf"/>
+                        <constraint firstItem="R97-gy-HYj" firstAttribute="centerY" secondItem="Vgp-Ju-eBw" secondAttribute="centerY" id="f2j-gB-HFx"/>
+                        <constraint firstItem="R97-gy-HYj" firstAttribute="centerY" secondItem="Vgp-Ju-eBw" secondAttribute="centerY" id="lsw-Lf-HDJ"/>
+                        <constraint firstItem="CMs-ZO-Rpi" firstAttribute="centerX" secondItem="Vgp-Ju-eBw" secondAttribute="centerX" id="op2-uN-eQC"/>
+                        <constraint firstItem="CMs-ZO-Rpi" firstAttribute="top" secondItem="Vgp-Ju-eBw" secondAttribute="top" constant="8" id="yzG-m7-mwg"/>
+                    </constraints>
+                </view>
+                <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" style="plain" separatorStyle="default" rowHeight="44" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="vJn-7Y-7UN">
+                    <rect key="frame" x="8" y="64" width="359" height="559"/>
+                    <color key="backgroundColor" red="0.95294117649999999" green="0.95294117649999999" blue="0.95294117649999999" alpha="1" colorSpace="calibratedRGB"/>
+                </tableView>
+            </subviews>
+            <color key="backgroundColor" red="0.95294117649999999" green="0.95294117649999999" blue="0.95294117649999999" alpha="1" colorSpace="calibratedRGB"/>
+            <constraints>
+                <constraint firstItem="Vgp-Ju-eBw" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="5bp-Oi-kwJ"/>
+                <constraint firstAttribute="trailing" secondItem="vJn-7Y-7UN" secondAttribute="trailing" constant="8" id="GAJ-LQ-1Cb"/>
+                <constraint firstAttribute="bottom" secondItem="Vgp-Ju-eBw" secondAttribute="bottom" id="NEa-GU-NXQ"/>
+                <constraint firstAttribute="trailing" secondItem="e4H-Dl-x90" secondAttribute="trailing" id="cYb-TU-Mab"/>
+                <constraint firstItem="e4H-Dl-x90" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" id="gfO-dT-I6b"/>
+                <constraint firstAttribute="trailing" secondItem="Vgp-Ju-eBw" secondAttribute="trailing" id="hqw-7v-8uL"/>
+                <constraint firstItem="vJn-7Y-7UN" firstAttribute="leading" secondItem="i5M-Pr-FkT" secondAttribute="leading" constant="8" id="qVK-uE-AUr"/>
+                <constraint firstItem="vJn-7Y-7UN" firstAttribute="top" secondItem="e4H-Dl-x90" secondAttribute="bottom" id="quJ-DD-Plp"/>
+                <constraint firstItem="e4H-Dl-x90" firstAttribute="top" secondItem="i5M-Pr-FkT" secondAttribute="top" id="syV-M8-ssU"/>
+                <constraint firstItem="Vgp-Ju-eBw" firstAttribute="top" secondItem="vJn-7Y-7UN" secondAttribute="bottom" id="xNu-bI-Sre"/>
+            </constraints>
+            <simulatedScreenMetrics key="simulatedDestinationMetrics" type="retina47"/>
+            <point key="canvasLocation" x="274.5" y="277.5"/>
+        </view>
+    </objects>
+    <resources>
+        <image name="defaultBack" width="15" height="20"/>
+        <image name="plus_w" width="19" height="19"/>
+    </resources>
+</document>

@@ -1,0 +1,362 @@
+//
+//  UtilTool.m
+//  P-SHARE
+//
+//  Created by fay on 16/8/30.
+//  Copyright © 2016年 fay. All rights reserved.
+//
+
+#import "UtilTool.h"
+#import "sys/utsname.h"
+#import "UIAlertController+supportedInterfaceOrientations.h"
+@implementation UtilTool
++ (NSMutableAttributedString *)getLableText:(NSString *)text changeText:(NSString *)changeString Color:(UIColor *)color font:(NSInteger)font{
+    
+    if ([self isBlankString:changeString] == YES || text == nil) {
+        return nil;
+        
+    }
+    
+    if ([text rangeOfString:changeString].location != NSNotFound ) {
+        
+        NSMutableAttributedString *noteStr = [[NSMutableAttributedString alloc] initWithString:text];
+        NSRange range = [text rangeOfString:changeString];
+        
+        
+        NSDictionary *dict = @{NSForegroundColorAttributeName:color,NSFontAttributeName:[UIFont systemFontOfSize:font]};
+        [noteStr addAttributes:dict range:range];
+        return noteStr;
+        
+        
+    }
+    NSMutableAttributedString *noteStr = [[NSMutableAttributedString alloc] initWithString:text];
+    return noteStr;
+}
++ (BOOL) isBlankString:(NSString *)string {
+    if (string == nil || string == NULL) {
+        return YES;
+    }
+    if ([string isKindOfClass:[NSNull class]]) {
+        return YES;
+    }
+    if ([string isEqualToString:@"(null)"]) {
+        return YES;
+    }
+    if ([[string stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceCharacterSet]] length]==0) {
+        return YES;
+    }
+    return NO;
+}
++ (NSString*)StringValue:(NSInteger)num
+{
+    
+    return [NSString stringWithFormat:@"%ld",num];
+    
+}
++(UILabel *)createLabelFrame:(CGRect)frame title:(NSString *)title textColor:(UIColor *)color font:(UIFont *)font textAlignment:(NSTextAlignment)textAlignment numberOfLine:(NSInteger)numberOfLines
+{
+    UILabel *label = [[UILabel alloc] initWithFrame:frame];
+    //文字
+    if (title) {
+        label.text = title;
+    }
+    //文字颜色
+    if (color) {
+        label.textColor = color;
+    }
+    if (font) {
+        label.font = font;
+    }
+    if (textAlignment) {
+        label.textAlignment = textAlignment;
+    }
+    if (numberOfLines) {
+        label.numberOfLines = numberOfLines;
+    }
+    
+    return label;
+    
+}
++ (NSString *)getCustomId{
+    NSUserDefaults *userDefault = [NSUserDefaults standardUserDefaults];
+    NSString *userID = [userDefault objectForKey:@"customerId"];
+    return userID;
+}
+
+
++ (NSString *)separateParkingCode:(NSString *)parkingCode{
+    NSString *str = parkingCode;
+    NSMutableArray *array = [[NSMutableArray alloc]init];
+    MyLog(@"%ld",(unsigned long)str.length);
+    if (str.length >6) {
+        return str;
+    }else{
+        
+        for (int i = 0; i<str.length; i++) {
+            unichar an = [str characterAtIndex:i];
+            NSString *str = [NSString stringWithFormat:@"%c",an];
+            if (i == 1) {
+                [array addObject:str];
+                [array addObject:@"-"];
+            }else if (i == 3) {
+                [array addObject:str];
+                [array addObject:@"-"];
+            }else{
+                [array addObject:str];
+            }
+            
+        }
+        
+    }
+    
+    return [array componentsJoinedByString:@""];
+}
+
++ (void)drawDashLine:(UIView *)lineView lineLength:(int)lineLength lineSpacing:(int)lineSpacing lineColor:(UIColor *)lineColor
+{
+    CAShapeLayer *shapeLayer = [CAShapeLayer layer];
+    MyLog(@"%f  %f",CGRectGetWidth(lineView.frame),CGRectGetHeight(lineView.frame));
+
+    shapeLayer.frame = CGRectMake(0, 0,CGRectGetWidth(lineView.frame), 500);
+    [shapeLayer setFillColor:[UIColor clearColor].CGColor];
+    //  设置虚线颜色为blackColor
+    [shapeLayer setStrokeColor:lineColor.CGColor];
+    //  设置虚线宽度
+    [shapeLayer setLineWidth:CGRectGetWidth(lineView.frame)];
+    [shapeLayer setLineJoin:kCALineJoinRound];
+    //  设置线宽，线间距
+    [shapeLayer setLineDashPattern:[NSArray arrayWithObjects:[NSNumber numberWithInt:lineLength], [NSNumber numberWithInt:lineSpacing], nil]];
+    //  设置路径
+    CGMutablePathRef path = CGPathCreateMutable();
+    CGPathMoveToPoint(path, NULL, 0, 0);
+    CGPathAddLineToPoint(path, NULL,0, 500);
+    [shapeLayer setPath:path];
+    CGPathRelease(path);
+    //  把绘制好的虚线添加上来
+    [lineView.layer addSublayer:shapeLayer];
+}
++(UIButton *)createBtnFrame:(CGRect)frame title:(NSString *)title bgImageName:(NSString *)bgImageName target:(id)target action:(SEL)action
+{
+    UIButton *btn = [UIButton buttonWithType:UIButtonTypeCustom];
+    
+    btn.frame = frame;
+    if (title) {
+        [btn setTitle:title forState:UIControlStateNormal];
+        [btn setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+    }
+    if (bgImageName) {
+        [btn setBackgroundImage:[UIImage imageNamed:bgImageName] forState:UIControlStateNormal];
+    }
+    if (target && action) {
+        [btn addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
+    }
+    return btn;
+    
+}
++(BOOL)isValidateTelNumber:(NSString *)number
+{
+    
+    NSString *strRegex = @"[0-9]{11}";
+    
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", strRegex];
+    BOOL rt = [predicate evaluateWithObject:number];
+    
+    return rt;
+    
+}
++(BOOL)isValidateSecurityCode:(NSString *)securityCode
+{
+    NSString *strRegex = @"[0-9]{4}";
+    
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"SELF MATCHES %@", strRegex];
+    BOOL rt = [predicate evaluateWithObject:securityCode];
+    
+    return rt;
+}
++ (NSString *)getAppVersion
+{
+    NSDictionary *infoDictionary = [[NSBundle mainBundle] infoDictionary];
+    NSString *appVersion = [infoDictionary objectForKey:@"CFBundleShortVersionString"];
+    return appVersion;
+}
++ (NSString *)getPhoneType{
+    struct utsname systemInfo;
+    uname(&systemInfo);
+    NSString *model = [NSString stringWithCString:systemInfo.machine encoding:NSUTF8StringEncoding];
+    if ([model isEqualToString:@"iPhone2,1"])    return @"iPhone 3GS";
+    if ([model isEqualToString:@"iPhone3,1"])    return @"iPhone 4";
+    if ([model isEqualToString:@"iPhone3,3"])    return @"iPhone 4";
+    if ([model isEqualToString:@"iPhone4,1"])    return @"iPhone 4S";
+    if ([model isEqualToString:@"iPhone5,1"])    return @"iPhone 5";
+    if ([model isEqualToString:@"iPhone5,2"])    return @"iPhone 5";
+    if ([model isEqualToString:@"iPhone5,3"])    return @"iPhone 5c";
+    if ([model isEqualToString:@"iPhone5,4"])    return @"iPhone 5c";
+    if ([model isEqualToString:@"iPhone6,1"])    return @"iPhone 5s";
+    if ([model isEqualToString:@"iPhone6,2"])    return @"iPhone 5s";
+    if ([model isEqualToString:@"iPhone7,1"])    return @"iPhone 6 Plus";
+    if ([model isEqualToString:@"iPhone7,2"])    return @"iPhone 6";
+    if ([model isEqualToString:@"iPhone8,1"])    return @"iPhone 6s";
+    if ([model isEqualToString:@"iPhone8,2"])    return @"iPhone 6s Plus";
+    if ([model isEqualToString:@"iPhone8,3"])    return @"iPhone SE";
+    if ([model isEqualToString:@"iPhone8,4"])    return @"iPhone SE";
+    return model;
+}
++ (BOOL)isVisitor
+{
+    NSUserDefaults *userDefault = [NSUserDefaults standardUserDefaults];
+    if (![UtilTool isBlankString:[userDefault objectForKey:@"customerId"]]) {
+        return NO;
+    }else
+    {
+        return YES;
+    }
+}
+//获取字符串高度
++ (CGFloat)getStringHeightWithString:(NSString *)string Font:(CGFloat )font MaxWitdth:(CGFloat )maxWidth
+{
+    CGRect rect = [string boundingRectWithSize:CGSizeMake(maxWidth, MAXFLOAT) options:NSStringDrawingUsesLineFragmentOrigin|NSStringDrawingUsesFontLeading attributes:@{NSFontAttributeName:[UIFont systemFontOfSize:font]} context:nil];
+    
+    return rect.size.height;
+    
+}
+
+//获取时间戳
++ (NSString *)getTimeStamp
+{
+    
+    NSDate *currentDate = [NSDate date];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    [formatter setDateFormat:@"YYYYMMddHHmmss"];
+    NSString* dateString = [formatter stringFromDate:currentDate];
+    return dateString;
+    
+}
++ (void)creatAlertController:(UIViewController *)viewController   title:(NSString *)title describute:(NSString *)describute sureClick:(void (^)())sureClick cancelClick:(void (^)())cancelClick;
+{
+    UIAlertController *alertController = [UIAlertController alertControllerWithTitle:title message:describute preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"确定" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        if (sureClick) {
+            sureClick();
+        }
+    }]];
+    
+    [alertController addAction:[UIAlertAction actionWithTitle:@"取消" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
+        if (cancelClick) {
+            cancelClick();
+        }
+    }]];
+
+
+    [viewController presentViewController:alertController animated:YES completion:nil];
+}
+
++ (NSString *)createFilePathWith:(NSString *)fileName
+{
+    NSString *dataPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+    dataPath = [dataPath stringByAppendingFormat:@"/%@.pch",fileName];
+    return dataPath;
+}
++ (void)deleteFileWith:(NSString *)fileName
+{
+    NSString *dataPath = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).lastObject;
+    dataPath = [dataPath stringByAppendingFormat:@"/%@",fileName];
+    NSFileManager *fileManager = [NSFileManager defaultManager];
+    [fileManager removeItemAtPath:dataPath error:nil];
+}
++ (NSString *)mathTimeDifferenceWith:(NSDate*)time otherTime:(NSDate*)otherTime
+{
+    NSCalendar *calendar = [NSCalendar currentCalendar];
+    // 需要对比的时间数据
+    NSCalendarUnit unit = NSCalendarUnitYear | NSCalendarUnitMonth
+    | NSCalendarUnitDay | NSCalendarUnitHour | NSCalendarUnitMinute | NSCalendarUnitSecond;
+    // 对比时间差
+    NSDateComponents *dateCom = [calendar components:unit fromDate:time toDate:otherTime options:0];
+    NSInteger year = dateCom.year;
+    NSInteger month = dateCom.month;
+    NSInteger day = dateCom.day;
+    NSMutableString *temStr = [NSMutableString string];
+    year > 0 ? [temStr appendFormat:@"%ld年",year] : temStr;
+    month > 0 ? [temStr appendFormat:@"%ld月",month] : temStr;
+    day > 0 ? [temStr appendFormat:@"%ld天",day] : temStr;
+
+    
+    return temStr;
+    
+}
++ (NSString *)getCalendar:(NSString *)string WithMonthlyNum:(NSInteger)num
+{
+    
+    NSDateFormatter *inputFormatter= [[NSDateFormatter alloc] init] ;
+    
+    [inputFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"] ];
+    
+    [inputFormatter setDateFormat:@"yyyy-MM-dd"];
+    
+    NSDate *inputDate = [inputFormatter dateFromString:string];
+    NSDateComponents *comps = [[NSDateComponents alloc] init];
+    
+    [comps setMonth:num];
+    
+    NSCalendar *calender = [[NSCalendar alloc] initWithCalendarIdentifier:NSCalendarIdentifierGregorian];
+    
+    NSDate *mDate = [calender dateByAddingComponents:comps toDate:inputDate options:0];
+    NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+    NSRange range = [calender rangeOfUnit:NSCalendarUnitDay inUnit:NSCalendarUnitMonth forDate:mDate];
+    NSInteger numberOfDaysInMonth = range.length;
+    
+    MyLog(@"%zi",range.length);
+    
+    NSString *year;
+    NSString *mouthly;
+    [formatter setDateFormat:@"MM"];
+    mouthly = [formatter stringFromDate:mDate];
+    [formatter setDateFormat:@"yyyy"];
+    year = [formatter stringFromDate:mDate];
+    NSString *str = [NSString stringWithFormat:@"%@-%@-%ld",year,mouthly,(long)numberOfDaysInMonth];
+    
+    return str;
+    
+}
+
++ (NSInteger)compareOneDay:(NSDate *)oneDay withAnotherDay:(NSDate *)anotherDay
+{
+    NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+    [dateFormatter setDateFormat:@"dd-MM-yyyy"];
+    NSString *oneDayStr = [dateFormatter stringFromDate:oneDay];
+    NSString *anotherDayStr = [dateFormatter stringFromDate:anotherDay];
+    NSDate *dateA = [dateFormatter dateFromString:oneDayStr];
+    NSDate *dateB = [dateFormatter dateFromString:anotherDayStr];
+    NSComparisonResult result = [dateA compare:dateB];
+    MyLog(@"date1 : %@, date2 : %@", oneDay, anotherDay);
+    if (result == NSOrderedDescending) {
+        //MyLog(@"Date1  is in the future");
+        return 1;
+    }
+    else if (result == NSOrderedAscending){
+        //MyLog(@"Date1 is in the past");
+        return -1;
+    }
+    //MyLog(@"Both dates are the same");
+    return 0;
+    
+}
++ (NSString *)getCustomerInfo:(NSString *)customerInfo{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    return [defaults objectForKey:customerInfo];
+}
++ (NSDate*)StringChangeDate:(NSString *)str
+{
+    
+    NSDateFormatter *inputFormatter= [[NSDateFormatter alloc] init] ;
+    
+    [inputFormatter setLocale:[[NSLocale alloc] initWithLocaleIdentifier:@"en_US"] ];
+    
+    [inputFormatter setDateFormat:@"yyyy-MM-dd"];
+    
+    NSDate *inputDate = [inputFormatter dateFromString:str];
+    
+    return inputDate;
+    
+}
+
+@end

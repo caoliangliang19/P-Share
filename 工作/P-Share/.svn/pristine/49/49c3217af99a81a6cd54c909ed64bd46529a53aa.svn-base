@@ -1,0 +1,334 @@
+//
+//  PersonInfoController.m
+//  P-Share
+//
+//  Created by 亮亮 on 16/8/24.
+//  Copyright © 2016年 曹亮亮. All rights reserved.
+//
+
+#import "PersonInfoController.h"
+#import "PersonInfoCell.h"
+#import "ChangeInfoVC.h"
+#import "MyCertifyVC.h"
+#import "MyQRCodeVC.h"
+#import "GrowthValueVC.h"
+
+@interface PersonInfoController ()<UITableViewDelegate,UITableViewDataSource,UIActionSheetDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate>
+{
+    UITableView *_personTableView;
+    NSMutableArray *_leftArray;
+    BOOL _fromCamera;
+    NSString *headImagetring;
+    
+    MBProgressHUD *_mbView;
+    
+    UIView *_clearBackView;
+}
+@property (nonatomic,strong)NSArray *imageArray;
+@property (nonatomic,strong)UIView *headerView;
+@end
+
+@implementation PersonInfoController
+
+- (void)viewDidLoad {
+    _imageArray = [[NSMutableArray alloc]initWithObjects:@"authenticate_family",@"authenticate_fixed",@"authenticate_h_add-to", nil];
+    [super viewDidLoad];
+    [self createHeadView];
+    [self createDataSource];
+    [self createTableView];
+    
+}
+#pragma mark -
+#pragma mark - 创建 UINavigationController 自定义
+- (void)createHeadView{
+  
+    self.view.backgroundColor = [UIColor colorWithHexString:@"eeeeee"];
+    self.title = @"个人信息";
+  
+   
+}
+
+- (void)backBtnClick{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+- (void)createDataSource{
+    _leftArray = [NSMutableArray arrayWithObjects:@"头像",@"昵称",@"手机号",@"身份证",@"我的级别",@"我的认证",@"我的二维码", nil];
+}
+- (void)createTableView{
+    _personTableView = [[UITableView alloc]initWithFrame:CGRectMake(0, 64, SCREEN_WIDTH, SCREEN_HEIGHT-64) style:(UITableViewStylePlain)];
+    _personTableView.delegate = self;
+    _personTableView.dataSource = self;
+    [_personTableView registerNib:[UINib nibWithNibName:@"PersonInfoCell" bundle:nil] forCellReuseIdentifier:@"personInfoCell"];
+    _personTableView.tableFooterView = [[UIView alloc]init];
+    [self.view addSubview:_personTableView];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onTableView) name:@"CustomInfo" object:nil];
+}
+- (void)onTableView{
+    [_personTableView reloadData];
+}
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section{
+    return 7;
+    
+}
+- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath{
+    PersonInfoCell *cell = [tableView dequeueReusableCellWithIdentifier:@"personInfoCell" forIndexPath:indexPath];
+    cell.selectionStyle = UITableViewCellSelectionStyleNone;
+    cell.leftLable.text = _leftArray[indexPath.row];
+    if (indexPath.row == 0) {
+        cell.rightLable.hidden = YES;
+        [cell.myImageView1 sd_setImageWithURL:[NSURL URLWithString:[self getCustomerInfo:KHEADIMG_URL]] placeholderImage:[UIImage imageNamed:@"item_Head-portrait_114"]];
+        cell.myImageView1.clipsToBounds = YES;
+        cell.myImageView1.layer.cornerRadius = (55 - 16)/2;
+        
+    }else if (indexPath.row == 5){
+        cell.rightLable.hidden = YES;
+        if (_imageArray.count == 1) {
+            cell.myImageView1.image =[UIImage imageNamed:_imageArray[0]];
+        }else if (_imageArray.count == 2){
+            cell.myImageView1.image = [UIImage imageNamed:_imageArray[0]];
+            cell.myImageView2.image = [UIImage imageNamed:_imageArray[1]];
+        }else if (_imageArray.count == 3){
+            cell.myImageView1.image = [UIImage imageNamed:_imageArray[0]];
+            cell.myImageView2.image = [UIImage imageNamed:_imageArray[1]];
+            cell.myImageView3.image = [UIImage imageNamed:_imageArray[2]];
+        }
+    }else if (indexPath.row == 6){
+        cell.rightLable.hidden = YES;
+        cell.myImageView1.image = [UIImage imageNamed:@"item_QR-code"];
+        
+    }else{
+        cell.rightLable.hidden = NO;
+        if (indexPath.row == 1) {
+//            cell.rightLable.text = CUSTOMERMOBILE(customer_nickname);
+            cell.rightLable.text = [self getCustomerInfo:@"customerNickname"];
+        }else if (indexPath.row == 2){
+            cell.itemImageView.hidden = YES;
+//            cell.rightLable.text = CUSTOMERMOBILE(customer_mobile);
+            cell.rightLable.text = [self getCustomerInfo:@"customerMobile"];
+        }else if (indexPath.row == 3){
+//            cell.rightLable.text = CUSTOMERMOBILE(customer_region);
+            cell.rightLable.text = [self getCustomerInfo:@"customerRegion"];
+        }else if (indexPath.row == 4){
+            cell.rightLable.text = @"金牌会员";
+        }
+    }
+    return cell;
+}
+- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath{
+    if (indexPath.row == 0) {
+        return 55;
+    }else{
+        return 40;
+    }
+}
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    if (indexPath.row == 0) {
+        UIActionSheet *actionSheet = [[UIActionSheet alloc]
+                                      initWithTitle:@"请选择照片"
+                                      delegate:self
+                                      cancelButtonTitle:@"取消"
+                                      destructiveButtonTitle:nil
+                                      otherButtonTitles:@"拍照",@"相册", nil];
+        [actionSheet showInView:self.view];
+    }else if (indexPath.row == 1){
+        ChangeInfoVC *info = [[ChangeInfoVC alloc]init];
+         info.state = CLLPushControllStateName;
+        [self.rt_navigationController pushViewController:info animated:YES];
+       
+    }else if (indexPath.row == 2){
+        
+    }else if (indexPath.row == 3){
+        
+        ChangeInfoVC *info = [[ChangeInfoVC alloc]init];
+        info.state = CLLPushControllStateCardID;
+        [self.rt_navigationController pushViewController:info animated:YES];
+        
+    }else if (indexPath.row == 4){
+        GrowthValueVC *grow = [[GrowthValueVC alloc] init];
+        [self.rt_navigationController pushViewController:grow animated:YES];
+    }else if (indexPath.row == 5){
+        MyCertifyVC *certify = [[MyCertifyVC alloc]init];
+        [self.rt_navigationController pushViewController:certify animated:YES];
+        
+    }else if (indexPath.row == 6){
+        MyQRCodeVC *privilege = [[MyQRCodeVC alloc]init];
+        [self.rt_navigationController pushViewController:privilege animated:YES];
+    }
+}
+
+-(void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex {
+    switch (buttonIndex) {
+        case 0:
+            [self takePhotoByCamera];
+            _fromCamera = YES;
+            break;
+        case 1:
+            [self takePhotoByLibrary];
+            _fromCamera = NO;
+            break;
+        default:
+            break;
+    }
+}
+- (void)takePhotoByCamera{
+    if (![UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+        return;
+    }else {
+        UIImagePickerController *picker = [[UIImagePickerController alloc] init];
+        picker.sourceType = UIImagePickerControllerSourceTypeCamera;
+        picker.delegate = self;
+        [self presentViewController:picker animated:YES completion:nil];
+    }
+}
+- (void)takePhotoByLibrary{
+    UIImagePickerController *picker = [[UIImagePickerController alloc]init];
+    picker.sourceType = UIImagePickerControllerSourceTypePhotoLibrary;
+    picker.delegate = self;
+    [self presentViewController:picker animated:YES completion:nil];
+}
+-(UIImage*)imageWithImage:(UIImage*)image scaledToSize:(CGSize)newSize
+{
+    // Create a graphics image context
+    UIGraphicsBeginImageContext(newSize);
+    
+    [image drawInRect:CGRectMake(0,0,newSize.width,newSize.height)];
+    
+    // Get the new image from the context
+    UIImage* newImage = UIGraphicsGetImageFromCurrentImageContext();
+    
+    // End the context
+    UIGraphicsEndImageContext();
+    
+    // Return the new image.
+    return newImage;
+}
+- (void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info {
+    
+    if ([info objectForKey:UIImagePickerControllerOriginalImage]) {
+        UIImage *image = nil;
+        image = [info objectForKey:UIImagePickerControllerOriginalImage];
+        //如果是拍照则保存到相册
+        if (_fromCamera) {
+            UIImageWriteToSavedPhotosAlbum(image, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
+        }
+        //图片剪切
+        CGSize imagesize = image.size;
+        imagesize.height =400;
+        imagesize.width =400;
+        //对图片大小进行压缩--
+        image = [self imageWithImage:image scaledToSize:imagesize];
+        
+        //        NSData *imageData = UIImagePNGRepresentation(image);
+        //        NSUserDefaults *userDefault = [NSUserDefaults standardUserDefaults];
+        //        [userDefault setObject:imageData forKey:customer_head];
+//        [self.myPicture setImage:image];
+        
+        NSData *imageData = UIImageJPEGRepresentation(image, 0.2);
+        [self updataUserInfoWithPost:imageData];
+        
+        //通知发送消息，更新侧滑页头像
+        //        NSNotification *notification = [[NSNotification alloc]initWithName:@"updataSideMenuHeader" object:nil userInfo:nil];
+        //        [[NSNotificationCenter defaultCenter] postNotification:notification];
+        
+        [picker dismissViewControllerAnimated:YES completion:nil];
+        
+    }
+}
+- (void)updataUserInfoWithPost:(NSData *)imageData
+{
+    
+   
+    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:[UtilTool getCustomId],@"customerId",@"2.0.4",@"version", nil];
+////    CUSTOMERMOBILE(customer_id)
+//    
+//    
+    AFHTTPSessionManager *manager = [AFHTTPSessionManager manager];
+
+    manager.responseSerializer = [AFHTTPResponseSerializer serializer];
+    manager.responseSerializer.acceptableContentTypes = [NSSet setWithObjects:@"application/json", @"text/html", @"text/json", @"text/javascript",@"text/plain", nil];
+
+        //@"http://192.168.1.124:9090/share/other/customer/updateCustomerInfo"
+    [manager POST:APP_URL(updateImage) parameters:dict constructingBodyWithBlock:^(id<AFMultipartFormData>  _Nonnull formData) {
+        
+        //第四个参数:@"image/png"
+        //第三个参数:随便给一个名字以.png结尾
+        //第二个参数:参数名
+//        NSDate *nowData = [NSDate date];
+//        NSDateFormatter *formatter = [[NSDateFormatter alloc] init];
+//        [formatter setDateFormat:@"yyyyMMddHHmmss"];
+//        NSString *imageName = [formatter stringFromDate:nowData];
+        
+        [formData appendPartWithFileData:imageData name:@"myFiles" fileName:@"" mimeType:@"image/jpeg"];
+        
+        
+    } progress:^(NSProgress * _Nonnull uploadProgress) {
+        
+    } success:^(NSURLSessionDataTask * _Nonnull task, id  _Nullable responseObject) {
+      
+        NSDictionary *dict = [NSJSONSerialization JSONObjectWithData:responseObject options:NSJSONReadingMutableLeaves error:nil];
+        
+        if ([dict isKindOfClass:[NSDictionary class]])
+        {
+           
+            
+            if ([dict[@"errorNum"] isEqualToString:@"0"])
+            {
+                NSUserDefaults *userDefaults = [NSUserDefaults standardUserDefaults];
+                NSDictionary *infoDict = dict[@"data"];
+                [userDefaults setObject:infoDict[@"customerId"] forKey:@"customerId"];
+                
+               if ([infoDict[@"customerHead"] length] > 5) {
+                   
+                    [userDefaults setObject:infoDict[@"customerHead"] forKey:@"customerHead"];
+                }
+                [userDefaults synchronize];
+                [[NSNotificationCenter defaultCenter]postNotificationName:LOGIN_SUCCESS object:nil];
+                [_personTableView reloadData];
+                
+                
+            }else{
+                MyLog(@"头像上传失败");
+            }
+        }
+       
+        
+    } failure:^(NSURLSessionDataTask * _Nullable task, NSError * _Nonnull error) {
+        MyLog(@"头像上传失败");
+      
+        
+    }];
+}
+- (void)imagePickerControllerDidCancel:(UIImagePickerController *)picker{
+    
+    [picker dismissViewControllerAnimated:YES completion:nil];
+}
+- (void)image:(UIImage*)image didFinishSavingWithError:(NSError*)error contextInfo:(void*)contextInfo
+{
+    if (!error) {
+        
+    }
+    else
+    {
+        
+    }
+}
+- (NSString *)getCustomerInfo:(NSString *)customerInfo{
+    NSUserDefaults *defaults = [NSUserDefaults standardUserDefaults];
+    return [defaults objectForKey:customerInfo];
+}
+- (void)didReceiveMemoryWarning {
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+/*
+#pragma mark - Navigation
+
+// In a storyboard-based application, you will often want to do a little preparation before navigation
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    // Get the new view controller using [segue destinationViewController].
+    // Pass the selected object to the new view controller.
+}
+*/
+
+@end

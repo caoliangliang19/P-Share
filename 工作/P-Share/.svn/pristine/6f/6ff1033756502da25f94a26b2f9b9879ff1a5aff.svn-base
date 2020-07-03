@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="10117" systemVersion="15C50" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES">
+    <dependencies>
+        <deployment identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
+    </dependencies>
+    <objects>
+        <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
+        <placeholder placeholderIdentifier="IBFirstResponder" id="-2" customClass="UIResponder"/>
+        <tableViewCell contentMode="scaleToFill" selectionStyle="default" indentationWidth="10" reuseIdentifier="ParkingListCell" rowHeight="56" id="KGk-i7-Jjw" customClass="ParkingListCell">
+            <rect key="frame" x="0.0" y="0.0" width="378" height="56"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+            <tableViewCellContentView key="contentView" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" tableViewCell="KGk-i7-Jjw" id="H2p-sc-9uM">
+                <rect key="frame" x="0.0" y="0.0" width="378" height="55.5"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="tmB-y8-sjc" userLabel="Main View">
+                        <rect key="frame" x="0.0" y="0.0" width="378" height="50.5"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="dTH-UY-EAI">
+                                <rect key="frame" x="10" y="5" width="5" height="40.5"/>
+                                <color key="backgroundColor" red="0.22352941179999999" green="0.83529411760000005" blue="0.72156862749999995" alpha="1" colorSpace="calibratedRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="5" id="eHi-PG-3nQ"/>
+                                </constraints>
+                            </view>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="parkingDefaultImage" translatesAutoresizingMaskIntoConstraints="NO" id="BIl-6r-uLO">
+                                <rect key="frame" x="23" y="5" width="40" height="40"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="40" id="dyn-Zc-HlN"/>
+                                    <constraint firstAttribute="height" constant="40" id="s8i-bZ-x0m"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="徐汇商务大厦" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="s96-Uu-SMb">
+                                <rect key="frame" x="71" y="5" width="96" height="20"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="117" id="3NF-kp-iqc"/>
+                                    <constraint firstAttribute="height" constant="20" id="Aay-iz-rkl"/>
+                                    <constraint firstAttribute="width" constant="188" id="bRM-NN-QhU"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="16"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="3NF-kp-iqc"/>
+                                        <exclude reference="bRM-NN-QhU"/>
+                                        <exclude reference="Aay-iz-rkl"/>
+                                    </mask>
+                                </variation>
+                            </label>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="black_point" translatesAutoresizingMaskIntoConstraints="NO" id="jET-zh-aA8">
+                                <rect key="frame" x="71" y="31" width="9" height="14"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="9" id="EbA-Qn-NPI"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="9" id="EwH-Ea-MrE"/>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="14" id="Sk8-7K-euI"/>
+                                    <constraint firstAttribute="height" constant="14" id="m3M-eY-brS"/>
+                                </constraints>
+                            </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="黄浦区淮海东路99号" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="izt-Cy-rE3">
+                                <rect key="frame" x="85" y="31" width="209" height="15"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="15" id="Tfb-cc-Cel"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="13"/>
+                                <color key="textColor" white="0.66666666666666663" alpha="1" colorSpace="calibratedWhite"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="mrW-Hv-2Bl">
+                                <rect key="frame" x="304" y="16" width="60" height="18"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="60" id="2hc-2z-6jN"/>
+                                    <constraint firstAttribute="height" constant="18" id="Z5D-zz-pLe"/>
+                                    <constraint firstAttribute="width" constant="60" id="fXi-WW-ERd"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="15"/>
+                                <state key="normal" title="家">
+                                    <color key="titleColor" red="0.3921568627" green="0.75686274509999996" blue="0.6705882353" alpha="1" colorSpace="calibratedRGB"/>
+                                </state>
+                                <variation key="default">
+                                    <mask key="constraints">
+                                        <exclude reference="2hc-2z-6jN"/>
+                                    </mask>
+                                </variation>
+                                <connections>
+                                    <action selector="rightBtnClick:" destination="KGk-i7-Jjw" eventType="touchUpInside" id="r03-af-Axf"/>
+                                </connections>
+                            </button>
+                        </subviews>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="izt-Cy-rE3" firstAttribute="top" secondItem="jET-zh-aA8" secondAttribute="top" id="01O-H9-VEL"/>
+                            <constraint firstItem="s96-Uu-SMb" firstAttribute="leading" secondItem="BIl-6r-uLO" secondAttribute="trailing" constant="8" id="2A3-zS-Nfb"/>
+                            <constraint firstItem="s96-Uu-SMb" firstAttribute="top" secondItem="BIl-6r-uLO" secondAttribute="top" id="4LB-Yc-gve"/>
+                            <constraint firstItem="BIl-6r-uLO" firstAttribute="centerY" secondItem="tmB-y8-sjc" secondAttribute="centerY" id="DCb-3r-7ln"/>
+                            <constraint firstItem="izt-Cy-rE3" firstAttribute="leading" secondItem="jET-zh-aA8" secondAttribute="trailing" constant="5" id="IfF-Po-YuC"/>
+                            <constraint firstItem="izt-Cy-rE3" firstAttribute="trailing" secondItem="mrW-Hv-2Bl" secondAttribute="leading" constant="-10" id="JqV-1A-2mB"/>
+                            <constraint firstAttribute="trailing" secondItem="mrW-Hv-2Bl" secondAttribute="trailing" constant="14" id="Kxl-Bb-fUR"/>
+                            <constraint firstAttribute="bottom" secondItem="dTH-UY-EAI" secondAttribute="bottom" constant="5" id="PyX-l4-swC"/>
+                            <constraint firstItem="dTH-UY-EAI" firstAttribute="leading" secondItem="tmB-y8-sjc" secondAttribute="leading" constant="10" id="Q8h-Rm-sdm"/>
+                            <constraint firstItem="jET-zh-aA8" firstAttribute="bottom" secondItem="BIl-6r-uLO" secondAttribute="bottom" id="WLL-EL-aIa"/>
+                            <constraint firstItem="BIl-6r-uLO" firstAttribute="leading" secondItem="dTH-UY-EAI" secondAttribute="trailing" constant="8" id="e4T-cp-F7L"/>
+                            <constraint firstItem="mrW-Hv-2Bl" firstAttribute="centerY" secondItem="tmB-y8-sjc" secondAttribute="centerY" id="fIn-42-uJj"/>
+                            <constraint firstItem="dTH-UY-EAI" firstAttribute="top" secondItem="tmB-y8-sjc" secondAttribute="top" constant="5" id="oEZ-ZH-mC1"/>
+                            <constraint firstItem="jET-zh-aA8" firstAttribute="leading" secondItem="s96-Uu-SMb" secondAttribute="leading" id="xqR-lT-EEn"/>
+                        </constraints>
+                    </view>
+                </subviews>
+                <color key="backgroundColor" red="0.92156862750000001" green="0.92156862750000001" blue="0.92156862750000001" alpha="1" colorSpace="calibratedRGB"/>
+                <constraints>
+                    <constraint firstItem="tmB-y8-sjc" firstAttribute="leading" secondItem="H2p-sc-9uM" secondAttribute="leading" id="9cY-bP-dTM"/>
+                    <constraint firstAttribute="bottom" secondItem="tmB-y8-sjc" secondAttribute="bottom" constant="5" id="Mrb-QT-WDr"/>
+                    <constraint firstAttribute="trailing" secondItem="tmB-y8-sjc" secondAttribute="trailing" id="YIu-iM-XfF"/>
+                    <constraint firstItem="tmB-y8-sjc" firstAttribute="top" secondItem="H2p-sc-9uM" secondAttribute="top" id="an9-vf-Leg"/>
+                </constraints>
+            </tableViewCellContentView>
+            <connections>
+                <outlet property="parkImageV" destination="BIl-6r-uLO" id="AXc-bk-4RU"/>
+                <outlet property="parkingAddressL" destination="izt-Cy-rE3" id="zzc-co-Oc5"/>
+                <outlet property="parkingNameL" destination="s96-Uu-SMb" id="ikF-T4-FKs"/>
+                <outlet property="rightButton" destination="mrW-Hv-2Bl" id="zzW-3Y-uvj"/>
+            </connections>
+            <point key="canvasLocation" x="240" y="227"/>
+        </tableViewCell>
+    </objects>
+    <resources>
+        <image name="black_point" width="16" height="28"/>
+        <image name="parkingDefaultImage" width="75" height="75"/>
+    </resources>
+</document>
